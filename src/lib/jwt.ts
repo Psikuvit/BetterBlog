@@ -7,7 +7,7 @@ const getKey = () => {
   return encoder.encode(secret)
 }
 
-export type TokenPayload = { sub: string; email?: string } & JWTPayload
+export type TokenPayload = { sub: string; email?: string; rm?: boolean } & JWTPayload
 
 export const signAccessToken = async (payload: { sub: string; email?: string }) => {
   const key = getKey()
@@ -19,12 +19,12 @@ export const signAccessToken = async (payload: { sub: string; email?: string }) 
   return jwt
 }
 
-export const signRefreshToken = async (payload: { sub: string; email?: string }) => {
+export const signRefreshToken = async (payload: { sub: string; email?: string; rememberMe?: boolean }) => {
   const key = getKey()
-  const jwt = await new SignJWT({ sub: payload.sub, email: payload.email })
+  const jwt = await new SignJWT({ sub: payload.sub, email: payload.email, rm: Boolean(payload.rememberMe) })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime(payload.rememberMe ? '30d' : '7d')
     .sign(key)
   return jwt
 }
