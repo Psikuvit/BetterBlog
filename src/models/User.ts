@@ -11,6 +11,8 @@ export interface IUser {
   avatarUrl: string
   role: UserRole
   preferences: Record<string, unknown>
+  passwordResetTokenHash?: string | null
+  passwordResetExpiresAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -55,6 +57,14 @@ const UserSchema = new Schema<IUser, UserModel>(
     preferences: {
       type: Schema.Types.Mixed,
       default: {},
+    },
+    passwordResetTokenHash: {
+      type: String,
+      default: null,
+    },
+    passwordResetExpiresAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true },

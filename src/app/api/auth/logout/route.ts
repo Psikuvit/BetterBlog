@@ -1,10 +1,8 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import { clearRefreshCookie } from '@/lib/auth'
 
-const REFRESH_COOKIE = 'bb_refresh'
-
-export async function POST(req: NextRequest) {
+export async function POST() {
   const res = NextResponse.json({ ok: true })
-  res.headers.set('Set-Cookie', `${REFRESH_COOKIE}=deleted; HttpOnly; Path=/; Max-Age=0; SameSite=Strict`)
+  clearRefreshCookie(res)
   return res
 }

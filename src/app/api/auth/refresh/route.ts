@@ -1,8 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { verifyToken, signAccessToken, signRefreshToken } from '@/lib/jwt'
-
-const REFRESH_COOKIE = 'bb_refresh'
+import { clearRefreshCookie, REFRESH_COOKIE, setRefreshCookie } from '@/lib/auth'
 
 function parseCookies(cookieHeader: string | null) {
   const out: Record<string, string> = {}
@@ -22,11 +21,17 @@ export async function POST(req: NextRequest) {
   try {
     const payload = await verifyToken(token)
     const accessToken = await signAccessToken({ sub: String(payload.sub), email: payload.email as string })
-    const refreshToken = await signRefreshToken({ sub: String(payload.sub), email: payload.email as string })
+    const refreshToken = await signRefreshToken({
+      sub: String(payload.sub),
+      email: payload.email as string,
+      rememberMe: payload.rm === true,
+    })
     const res = NextResponse.json({ accessToken })
-    res.headers.set('Set-Cookie', `${REFRESH_COOKIE}=${refreshToken}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict`)
+    setRefreshCookie(res, refreshToken, payload.rm === true)
     return res
-  } catch (err) {
-    return NextResponse.json({ error: 'Invalid' }, { status: 401 })
+  } catch {
+    const res = NextResponse.json({ error: 'Invalid' }, { status: 401 })
+    clearRefreshCookie(res)
+    return res
   }
 }

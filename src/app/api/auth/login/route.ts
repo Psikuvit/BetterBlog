@@ -1,15 +1,18 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/db'
+import {connectDB} from '@/lib/db'
 import User from '@/models/User'
 import { verifyPassword } from '@/lib/password'
 import { signAccessToken, signRefreshToken } from '@/lib/jwt'
-
-const REFRESH_COOKIE = 'bb_refresh'
+import { sanitizeAuthUser, setRefreshCookie } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   await connectDB()
-  const { email, password } = await req.json()
+  const body = await req.json()
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+  const password = typeof body.password === 'string' ? body.password : ''
+  const rememberMe = Boolean(body.rememberMe)
+
   if (!email || !password) return NextResponse.json({ error: 'Missing' }, { status: 400 })
 
   const user = await User.findOne({ email })
@@ -19,9 +22,9 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: 'Invalid' }, { status: 401 })
 
   const accessToken = await signAccessToken({ sub: String(user._id), email: user.email })
-  const refreshToken = await signRefreshToken({ sub: String(user._id), email: user.email })
+  const refreshToken = await signRefreshToken({ sub: String(user._id), email: user.email, rememberMe })
 
-  const res = NextResponse.json({ accessToken })
-  res.headers.set('Set-Cookie', `${REFRESH_COOKIE}=${refreshToken}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict`)
+  const res = NextResponse.json({ accessToken, user: sanitizeAuthUser(user), rememberMe })
+  setRefreshCookie(res, refreshToken, rememberMe)
   return res
 }
