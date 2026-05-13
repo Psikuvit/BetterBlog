@@ -1,26 +1,209 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4efe7;
+  --foreground: #1e1b18;
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-border: rgba(30, 27, 24, 0.1);
+  --accent: #ca5a3f;
+  --accent-strong: #9f3f28;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(202, 90, 63, 0.22), transparent 34%),
+    radial-gradient(circle at 85% 15%, rgba(87, 124, 176, 0.18), transparent 28%),
+    linear-gradient(180deg, #fffaf3 0%, var(--background) 100%);
 }
 
 body {
-  background: var(--background);
+  margin: 0;
+  min-height: 100vh;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+}
+
+.panel {
+  width: min(100%, 960px);
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  box-shadow: 0 24px 80px rgba(30, 27, 24, 0.12);
+  overflow: hidden;
+}
+
+.panel-inner {
+  padding: 28px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+
+.brand-mark {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), #efb36d);
+  box-shadow: 0 0 0 6px rgba(202, 90, 63, 0.12);
+}
+
+.hero {
+  display: grid;
+  gap: 22px;
+  align-items: start;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+}
+
+.title {
+  margin: 14px 0 14px;
+  font-size: clamp(2.6rem, 7vw, 5.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.lede {
+  margin: 0;
+  max-width: 56ch;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: rgba(30, 27, 24, 0.82);
+}
+
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  border-radius: 22px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.78);
+  padding: 18px;
+}
+
+.card h2,
+.card h3 {
+  margin: 0 0 10px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.button,
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.button {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(202, 90, 63, 0.22);
+}
+
+.button-secondary {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(30, 27, 24, 0.12);
+}
+
+.button:hover,
+.button-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(30, 27, 24, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 14px;
+}
+
+.field textarea {
+  min-height: 124px;
+  resize: vertical;
+}
+
+.grid-2 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.notice {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(202, 90, 63, 0.1);
+  color: var(--accent-strong);
+}
+
+.muted {
+  color: rgba(30, 27, 24, 0.68);
+}
+
+@media (max-width: 820px) {
+  .hero,
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-inner {
+    padding: 20px;
+  }
 }
