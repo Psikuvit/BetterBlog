@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db'
 import { verifyToken } from '@/lib/jwt'
 import User from '@/models/User'
 
+export const ACCESS_COOKIE = 'bb_access'
 export const REFRESH_COOKIE = 'bb_refresh'
 
 type UserShape = {
@@ -71,6 +72,24 @@ export const setRefreshCookie = (res: NextResponse, token: string, rememberMe: b
   }
 
   res.cookies.set(REFRESH_COOKIE, token, options)
+}
+
+export const setAccessCookie = (res: NextResponse, token: string) => {
+  res.cookies.set(ACCESS_COOKIE, token, {
+    httpOnly: true,
+    path: '/',
+    sameSite: 'strict',
+    maxAge: 15 * 60,
+  })
+}
+
+export const clearAccessCookie = (res: NextResponse) => {
+  res.cookies.set(ACCESS_COOKIE, '', {
+    httpOnly: true,
+    path: '/',
+    sameSite: 'strict',
+    maxAge: 0,
+  })
 }
 
 export const clearRefreshCookie = (res: NextResponse) => {

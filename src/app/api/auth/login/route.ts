@@ -4,7 +4,7 @@ import {connectDB} from '@/lib/db'
 import User from '@/models/User'
 import { verifyPassword } from '@/lib/password'
 import { signAccessToken, signRefreshToken } from '@/lib/jwt'
-import { sanitizeAuthUser, setRefreshCookie } from '@/lib/auth'
+import { sanitizeAuthUser, setAccessCookie, setRefreshCookie } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   await connectDB()
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
   const refreshToken = await signRefreshToken({ sub: String(user._id), email: user.email, rememberMe })
 
   const res = NextResponse.json({ accessToken, user: sanitizeAuthUser(user), rememberMe })
+  setAccessCookie(res, accessToken)
   setRefreshCookie(res, refreshToken, rememberMe)
   return res
 }

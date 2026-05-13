@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { verifyToken, signAccessToken, signRefreshToken } from '@/lib/jwt'
-import { clearRefreshCookie, REFRESH_COOKIE, setRefreshCookie } from '@/lib/auth'
+import { clearAccessCookie, clearRefreshCookie, REFRESH_COOKIE, setAccessCookie, setRefreshCookie } from '@/lib/auth'
 
 function parseCookies(cookieHeader: string | null) {
   const out: Record<string, string> = {}
@@ -27,10 +27,12 @@ export async function POST(req: NextRequest) {
       rememberMe: payload.rm === true,
     })
     const res = NextResponse.json({ accessToken })
+    setAccessCookie(res, accessToken)
     setRefreshCookie(res, refreshToken, payload.rm === true)
     return res
   } catch {
     const res = NextResponse.json({ error: 'Invalid' }, { status: 401 })
+    clearAccessCookie(res)
     clearRefreshCookie(res)
     return res
   }
