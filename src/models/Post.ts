@@ -1,5 +1,7 @@
 import { model, models, Schema, Types, type Model } from 'mongoose'
 
+export type PostVisibility = 'public' | 'private' | 'admin-private'
+
 export interface IPost {
   _id: Types.ObjectId
   author: Types.ObjectId
@@ -7,8 +9,18 @@ export interface IPost {
   slug: string
   excerpt: string
   content: string
+  tags: string[]
+  visibility: PostVisibility
+  coverImageUrl: string
   isPublic: boolean
   publishedAt: Date | null
+  sourcePreviewTitle?: string | null
+  sourcePreviewDescription?: string | null
+  sourcePreviewImage?: string | null
+  originalAuthor?: string | null
+  legacyId?: string | null
+  sourceUrl?: string | null
+  importedAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -44,6 +56,19 @@ const PostSchema = new Schema<IPost, PostModel>(
       type: String,
       required: true,
     },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    visibility: {
+      type: String,
+      enum: ['public', 'private', 'admin-private'],
+      default: 'public',
+    },
+    coverImageUrl: {
+      type: String,
+      default: '',
+    },
     isPublic: {
       type: Boolean,
       default: true,
@@ -52,11 +77,44 @@ const PostSchema = new Schema<IPost, PostModel>(
       type: Date,
       default: null,
     },
+    sourcePreviewTitle: {
+      type: String,
+      default: null,
+    },
+    sourcePreviewDescription: {
+      type: String,
+      default: null,
+    },
+    sourcePreviewImage: {
+      type: String,
+      default: null,
+    },
+    originalAuthor: {
+      type: String,
+      default: null,
+    },
+    legacyId: {
+      type: String,
+      default: null,
+    },
+    sourceUrl: {
+      type: String,
+      default: null,
+    },
+    importedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 )
 
 PostSchema.index({ author: 1, isPublic: 1, publishedAt: -1 })
+PostSchema.index({ title: 'text', content: 'text', tags: 'text' })
+
+PostSchema.pre('save', function syncVisibility() {
+  this.isPublic = this.visibility === 'public'
+})
 
 const Post = (models.Post as PostModel | undefined) ?? model<IPost, PostModel>('Post', PostSchema)
 
