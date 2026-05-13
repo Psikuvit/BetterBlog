@@ -25,6 +25,12 @@ export default function HomePage() {
               <Link className="button-secondary" href="/register">
                 Create account
               </Link>
+              <Link className="button-secondary" href="/posts">
+                Posts
+              </Link>
+              <Link className="button-secondary" href="/posts/new">
+                New post
+              </Link>
               <Link className="button-secondary" href="/reset-password">
                 Reset password
               </Link>
@@ -40,6 +46,7 @@ export default function HomePage() {
                 <li>Login with remember me enabled or disabled</li>
                 <li>Request a password reset token</li>
                 <li>Open public profiles at /profile/[username]</li>
+                <li>Browse, create, edit, import, and export posts</li>
               </ul>
             </div>
 
