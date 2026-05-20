@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { apiUrl } from '@/utils/api'
 
 type TemporaryLink = {
   id: string
@@ -34,8 +35,8 @@ export default function SharingPage() {
       setLoading(true)
       try {
         const [linksRes, postsRes] = await Promise.all([
-          fetch('/api/sharing/links'),
-          fetch('/api/posts?limit=100'),
+          fetch(apiUrl('/api/sharing/links')),
+          fetch(apiUrl('/api/posts?limit=100')),
         ])
         const linksData = await linksRes.json()
         const postsData = await postsRes.json()
@@ -59,7 +60,7 @@ export default function SharingPage() {
 
     setCreating(true)
     try {
-      const response = await fetch('/api/sharing/links', {
+      const response = await fetch(apiUrl('/api/sharing/links'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -91,7 +92,7 @@ export default function SharingPage() {
     if (!confirm('Revoke this link?')) return
 
     try {
-      const response = await fetch(`/api/sharing/links/${linkId}`, {
+      const response = await fetch(apiUrl(`/api/sharing/links/${linkId}`), {
         method: 'DELETE',
       })
 

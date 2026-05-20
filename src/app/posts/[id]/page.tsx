@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { apiUrl } from '@/utils/api'
 
 type PostDetail = {
   id: string
@@ -52,7 +53,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     const loadPost = async () => {
       setLoading(true)
-      const response = await fetch(`/api/posts/${id}`)
+      const response = await fetch(apiUrl(`/api/posts/${id}`))
       const data = await response.json()
       if (!response.ok) {
         setPost(null)
@@ -78,7 +79,7 @@ export default function PostDetailPage() {
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const response = await fetch(`/api/posts/${id}`, {
+    const response = await fetch(apiUrl(`/api/posts/${id}`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -104,7 +105,7 @@ export default function PostDetailPage() {
   }
 
   const handleDelete = async () => {
-    const response = await fetch(`/api/posts/${id}`, { method: 'DELETE' })
+    const response = await fetch(apiUrl(`/api/posts/${id}`), { method: 'DELETE' })
     if (!response.ok) {
       const data = await response.json().catch(() => null)
       setMessage(data?.error || 'Delete failed')

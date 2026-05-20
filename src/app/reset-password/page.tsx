@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { apiUrl } from '@/utils/api'
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('')
@@ -11,7 +12,7 @@ export default function ResetPasswordPage() {
 
   const requestReset = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const res = await fetch('/api/auth/password-reset/request', {
+    const res = await fetch(apiUrl('/api/auth/password-reset/request'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -23,10 +24,10 @@ export default function ResetPasswordPage() {
 
   const confirmReset = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const res = await fetch('/api/auth/password-reset/confirm', {
+    const res = await fetch(apiUrl('/api/auth/password-reset/confirm'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, password }),
+      body: JSON.stringify({ token, newPassword: password }),
     })
     const data = await res.json().catch(() => null)
     setMessage(res.ok ? 'Password updated' : data?.error || 'Confirm failed')

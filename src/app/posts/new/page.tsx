@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { apiUrl } from '@/utils/api'
 
 type PreviewData = {
   url: string
@@ -41,11 +42,7 @@ export default function NewPostPage() {
     }
 
     try {
-      const response = await fetch('/api/posts/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: urlValue }),
-      })
+      const response = await fetch(apiUrl(`/api/posts/preview?url=${encodeURIComponent(urlValue)}`))
       const data = await response.json()
       setPreview(response.ok ? data.preview : null)
     } catch {
@@ -66,7 +63,7 @@ export default function NewPostPage() {
     setLoading(true)
     setMessage('')
 
-    const response = await fetch('/api/posts', {
+    const response = await fetch(apiUrl('/api/posts'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

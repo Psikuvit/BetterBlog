@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { apiUrl } from '@/utils/api'
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('')
@@ -12,7 +13,7 @@ export default function RegisterPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const res = await fetch('/api/auth/register', {
+    const res = await fetch(apiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password }),

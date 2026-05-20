@@ -1,6 +1,7 @@
 "use client"
 import { useState } from 'react'
 import Link from 'next/link'
+import { apiUrl } from '@/utils/api'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,8 +14,14 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      // TODO: Connect to Spring Boot backend login endpoint
-      setMsg('Login will connect to Spring Boot backend')
+      const response = await fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, rememberMe }),
+      })
+
+      const data = await response.json().catch(() => null)
+      setMsg(response.ok ? 'Login successful' : data?.error || 'Login failed')
     } catch (err: unknown) {
       setMsg(err instanceof Error ? err.message : 'Error')
     } finally {
