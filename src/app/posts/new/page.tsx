@@ -1,9 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/context/auth-context'
 
 type PreviewData = {
   url: string
@@ -20,7 +20,6 @@ const tagList = (value: string) =>
 
 export default function NewPostPage() {
   const router = useRouter()
-  const { user, authFetch } = useAuth()
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [excerpt, setExcerpt] = useState('')
@@ -67,7 +66,7 @@ export default function NewPostPage() {
     setLoading(true)
     setMessage('')
 
-    const response = await authFetch('/api/posts', {
+    const response = await fetch('/api/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -115,8 +114,6 @@ export default function NewPostPage() {
               </Link>
             </div>
           </div>
-
-          {!user ? <div className="notice">Sign in to create posts.</div> : null}
 
           <form className="split" onSubmit={handleSubmit} style={{ marginTop: 18 }}>
             <div className="stack-tight">
@@ -193,7 +190,7 @@ export default function NewPostPage() {
                       {preview.description || 'No description found.'}
                     </p>
                     {preview.image ? (
-                      <img src={preview.image} alt={preview.title} style={{ width: '100%', borderRadius: 18, border: '1px solid rgba(30, 27, 24, 0.12)' }} />
+                      <Image src={preview.image} alt={preview.title} width={500} height={300} style={{ width: '100%', height: 'auto', borderRadius: 18, border: '1px solid rgba(30, 27, 24, 0.12)' }} />
                     ) : null}
                     <a className="button-secondary" href={preview.url} target="_blank" rel="noreferrer">
                       Open source URL
@@ -207,7 +204,7 @@ export default function NewPostPage() {
               {message ? <div className="notice">{message}</div> : null}
 
               <div className="actions">
-                <button className="button" type="submit" disabled={loading || !user}>
+                <button className="button" type="submit" disabled={loading}>
                   {loading ? 'Saving...' : 'Create post'}
                 </button>
                 <Link className="button-secondary" href="/posts">

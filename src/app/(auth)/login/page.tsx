@@ -1,28 +1,25 @@
 "use client"
 import { useState } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/context/auth-context'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [msg, setMsg] = useState('')
-  const { user, loading, login, logout, isAuthenticated } = useAuth()
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setLoading(true)
     try {
-      await login(email, password, rememberMe)
-      setMsg('Logged in')
+      // TODO: Connect to Spring Boot backend login endpoint
+      setMsg('Login will connect to Spring Boot backend')
     } catch (err: unknown) {
       setMsg(err instanceof Error ? err.message : 'Error')
+    } finally {
+      setLoading(false)
     }
-  }
-
-  const handleLogout = async () => {
-    await logout()
-    setMsg('Logged out')
   }
 
   return (
@@ -36,17 +33,17 @@ export default function LoginPage() {
           <h1 className="title" style={{ fontSize: 'clamp(2rem, 5vw, 3.4rem)' }}>
             Login
           </h1>
-          <p className="lede">Sign in once and the auth provider keeps the session state available to the rest of the app.</p>
+          <p className="lede">Sign in with your email and password. Authentication will be handled by the Spring Boot backend.</p>
 
           <form className="form" onSubmit={handleLogin} style={{ marginTop: 24 }}>
             <div className="field">
               <label htmlFor="email">Email</label>
-              <input id="email" placeholder="sam@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input id="email" placeholder="sam@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
 
             <div className="field">
               <label htmlFor="password">Password</label>
-              <input id="password" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input id="password" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -58,9 +55,6 @@ export default function LoginPage() {
               <button className="button" type="submit" disabled={loading}>
                 {loading ? 'Loading...' : 'Login'}
               </button>
-              <button className="button-secondary" type="button" onClick={handleLogout} disabled={!isAuthenticated}>
-                Logout
-              </button>
               <Link className="button-secondary" href="/register">
                 Register
               </Link>
@@ -69,7 +63,7 @@ export default function LoginPage() {
 
           <div className="card" style={{ marginTop: 18 }}>
             <h2>Session</h2>
-            <p className="muted">{user ? `Signed in as @${user.username}` : 'No active session'}</p>
+            <p className="muted">Session management will be available once backend is connected.</p>
             {msg ? <p className="notice" style={{ marginTop: 12 }}>{msg}</p> : null}
           </div>
         </div>

@@ -1,9 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/context/auth-context'
 
 type PostDetail = {
   id: string
@@ -37,7 +37,6 @@ export default function PostDetailPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
   const router = useRouter()
-  const { user, authFetch } = useAuth()
   const [post, setPost] = useState<PostDetail | null>(null)
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
@@ -50,37 +49,36 @@ export default function PostDetailPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const loadPost = async () => {
-    setLoading(true)
-    const response = await authFetch(`/api/posts/${id}`)
-    const data = await response.json()
-    if (!response.ok) {
-      setPost(null)
-      setMessage(data?.error || 'Post not found')
+  useEffect(() => {
+    const loadPost = async () => {
+      setLoading(true)
+      const response = await fetch(`/api/posts/${id}`)
+      const data = await response.json()
+      if (!response.ok) {
+        setPost(null)
+        setMessage(data?.error || 'Post not found')
+        setLoading(false)
+        return
+      }
+
+      setPost(data.post)
+      setTitle(data.post.title)
+      setSlug(data.post.slug)
+      setExcerpt(data.post.excerpt)
+      setContent(data.post.content)
+      setTags((data.post.tags || []).join(', '))
+      setVisibility(data.post.visibility)
+      setCoverImageUrl(data.post.coverImageUrl || '')
+      setSourceUrl(data.post.sourceUrl || '')
       setLoading(false)
-      return
     }
 
-    setPost(data.post)
-    setTitle(data.post.title)
-    setSlug(data.post.slug)
-    setExcerpt(data.post.excerpt)
-    setContent(data.post.content)
-    setTags((data.post.tags || []).join(', '))
-    setVisibility(data.post.visibility)
-    setCoverImageUrl(data.post.coverImageUrl || '')
-    setSourceUrl(data.post.sourceUrl || '')
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    void loadPost()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadPost()
   }, [id])
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const response = await authFetch(`/api/posts/${id}`, {
+    const response = await fetch(`/api/posts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -106,7 +104,7 @@ export default function PostDetailPage() {
   }
 
   const handleDelete = async () => {
-    const response = await authFetch(`/api/posts/${id}`, { method: 'DELETE' })
+    const response = await fetch(`/api/posts/${id}`, { method: 'DELETE' })
     if (!response.ok) {
       const data = await response.json().catch(() => null)
       setMessage(data?.error || 'Delete failed')
@@ -139,7 +137,6 @@ export default function PostDetailPage() {
             </div>
           </div>
 
-          {!user ? <div className="notice">Sign in to edit or delete posts.</div> : null}
           {message ? <div className="notice" style={{ marginTop: 16 }}>{message}</div> : null}
 
           {loading ? (
@@ -193,7 +190,7 @@ export default function PostDetailPage() {
                     <input id="coverImageUrl" value={coverImageUrl} onChange={(event) => setCoverImageUrl(event.target.value)} />
                   </div>
                   <div className="actions">
-                    <button className="button-secondary" type="button" onClick={handleDelete} disabled={!user}>
+                    <button className="button-secondary" type="button" onClick={handleDelete}>
                       Delete post
                     </button>
                   </div>
@@ -224,7 +221,7 @@ export default function PostDetailPage() {
                       <p className="muted" style={{ margin: 0 }}>
                         {post.sourcePreviewDescription || 'No description found.'}
                       </p>
-                      {post.sourcePreviewImage ? <img src={post.sourcePreviewImage} alt={post.sourcePreviewTitle} style={{ width: '100%', borderRadius: 18 }} /> : null}
+                      {post.sourcePreviewImage ? <Image src={post.sourcePreviewImage} alt={post.sourcePreviewTitle || 'Preview'} width={500} height={300} style={{ width: '100%', height: 'auto', borderRadius: 18 }} /> : null}
                     </div>
                   ) : (
                     <p className="muted">No stored preview yet.</p>
@@ -239,7 +236,7 @@ export default function PostDetailPage() {
                 </div>
 
                 <div className="actions">
-                  <button className="button" type="submit" disabled={!user}>
+                  <button className="button" type="submit">
                     Save changes
                   </button>
                   <Link className="button-secondary" href="/posts/new">

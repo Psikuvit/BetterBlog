@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { useAuth } from '@/context/auth-context'
 
 type PostItem = {
   id: string
@@ -25,7 +24,6 @@ type PostItem = {
 }
 
 export default function PostsPage() {
-  const { user, authFetch, isAuthenticated } = useAuth()
   const [posts, setPosts] = useState<PostItem[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [query, setQuery] = useState('')
@@ -42,7 +40,7 @@ export default function PostsPage() {
       const params = new URLSearchParams()
       if (query) params.set('q', query)
       if (tag) params.set('tag', tag)
-      const response = await authFetch(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`)
+      const response = await fetch(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`)
       const data = await response.json()
       setPosts(Array.isArray(data?.posts) ? data.posts : [])
       setSelectedIds([])
@@ -66,7 +64,7 @@ export default function PostsPage() {
 
   const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) return
-    const response = await authFetch('/api/posts', {
+    const response = await fetch('/api/posts', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: selectedIds }),
@@ -91,7 +89,7 @@ export default function PostsPage() {
   }
 
   const handleImport = async () => {
-    const response = await authFetch('/api/posts/import', {
+    const response = await fetch('/api/posts/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ format: importFormat, payload: importPayload }),
@@ -157,7 +155,7 @@ export default function PostsPage() {
               </button>
             </div>
             <p className="muted" style={{ marginTop: 10 }}>
-              {isAuthenticated ? `Signed in as @${user?.username}` : 'Browsing public posts only.'} {filteredCount} post(s) loaded.
+              {filteredCount} post(s) loaded.
             </p>
           </div>
 
