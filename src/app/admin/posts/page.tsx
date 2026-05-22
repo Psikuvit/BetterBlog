@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
+import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '../../../utils/admin-auth'
 
 type AdminPost = {
   id: string
@@ -23,16 +25,37 @@ export default function AdminPostsPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const loadPosts = async () => {
       setLoading(true)
+
+      if (!getAdminAccessToken()) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       try {
         const params = new URLSearchParams()
         params.set('page', page.toString())
         if (filter !== 'all') params.set('visibility', filter)
-        const response = await fetch(apiUrl(`/api/admin/posts${params.toString() ? `?${params.toString()}` : ''}`))
-        const data = await response.json()
+        const response = await adminFetch(apiUrl(`/api/admin/posts${params.toString() ? `?${params.toString()}` : ''}`))
+        const data = await response.json().catch(() => null)
+
+        if (response.status === 401) {
+          router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+          return
+        }
+
+        if (!response.ok) {
+          setMessage(getAdminErrorMessage(response, data))
+          setPosts([])
+          setTotalPages(1)
+          return
+        }
+
         setPosts(Array.isArray(data?.posts) ? data.posts : [])
         setTotalPages(data?.totalPages || 1)
       } catch (error) {
@@ -42,20 +65,26 @@ export default function AdminPostsPage() {
       }
     }
     loadPosts()
-  }, [filter, page])
+  }, [filter, page, pathname, router])
 
   const handleChangeVisibility = async (postId: string, newVisibility: string) => {
     setActionLoading(postId)
     try {
-      const response = await fetch(apiUrl(`/api/admin/posts/${postId}`), {
+      const response = await adminFetch(apiUrl(`/api/admin/posts/${postId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ visibility: newVisibility }),
       })
 
+      const data = await response.json().catch(() => null)
+
+      if (response.status === 401) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       if (!response.ok) {
-        const data = await response.json()
-        setMessage(data?.error || 'Failed to update post')
+        setMessage(getAdminErrorMessage(response, data))
         return
       }
 
@@ -77,13 +106,19 @@ export default function AdminPostsPage() {
 
     setActionLoading(postId)
     try {
-      const response = await fetch(apiUrl(`/api/admin/posts/${postId}`), {
+      const response = await adminFetch(apiUrl(`/api/admin/posts/${postId}`), {
         method: 'DELETE',
       })
 
+      const data = await response.json().catch(() => null)
+
+      if (response.status === 401) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       if (!response.ok) {
-        const data = await response.json()
-        setMessage(data?.error || 'Failed to delete post')
+        setMessage(getAdminErrorMessage(response, data))
         return
       }
 

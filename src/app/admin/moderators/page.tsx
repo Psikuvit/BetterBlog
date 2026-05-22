@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
+import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '../../../utils/admin-auth'
 
 type Moderator = {
   id: string
@@ -18,13 +20,33 @@ export default function AdminModeratorsPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const loadModerators = async () => {
       setLoading(true)
+
+      if (!getAdminAccessToken()) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       try {
-        const response = await fetch(apiUrl('/api/admin/moderators'))
-        const data = await response.json()
+        const response = await adminFetch(apiUrl('/api/admin/moderators'))
+        const data = await response.json().catch(() => null)
+
+        if (response.status === 401) {
+          router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+          return
+        }
+
+        if (!response.ok) {
+          setMessage(getAdminErrorMessage(response, data))
+          setModerators([])
+          return
+        }
+
         setModerators(Array.isArray(data?.moderators) ? data.moderators : [])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load moderators')
@@ -33,20 +55,26 @@ export default function AdminModeratorsPage() {
       }
     }
     loadModerators()
-  }, [])
+  }, [pathname, router])
 
   const handleRemoveModerator = async (moderatorId: string) => {
     if (!confirm('Remove this user from moderator role?')) return
 
     setActionLoading(moderatorId)
     try {
-      const response = await fetch(apiUrl(`/api/admin/moderators/${moderatorId}`), {
+      const response = await adminFetch(apiUrl(`/api/admin/moderators/${moderatorId}`), {
         method: 'DELETE',
       })
 
+      const data = await response.json().catch(() => null)
+
+      if (response.status === 401) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       if (!response.ok) {
-        const data = await response.json()
-        setMessage(data?.error || 'Failed to remove moderator')
+        setMessage(getAdminErrorMessage(response, data))
         return
       }
 

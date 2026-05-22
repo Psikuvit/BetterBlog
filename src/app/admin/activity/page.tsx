@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
+import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '../../../utils/admin-auth'
 
 type AdminActivityLog = {
   id: string
@@ -22,6 +24,9 @@ export default function AdminActivityPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
+  const router = useRouter()
+  const pathname = usePathname()
 
   const severityColors: Record<string, string> = {
     info: 'rgba(59, 130, 246, 0.2)',
@@ -32,22 +37,41 @@ export default function AdminActivityPage() {
   useEffect(() => {
     const loadLogs = async () => {
       setLoading(true)
+
+      if (!getAdminAccessToken()) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       try {
         const params = new URLSearchParams()
         params.set('page', page.toString())
         if (filter !== 'all') params.set('severity', filter)
-        const response = await fetch(apiUrl(`/api/admin/activity${params.toString() ? `?${params.toString()}` : ''}`))
-        const data = await response.json()
+        const response = await adminFetch(apiUrl(`/api/admin/activity${params.toString() ? `?${params.toString()}` : ''}`))
+        const data = await response.json().catch(() => null)
+
+        if (response.status === 401) {
+          router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+          return
+        }
+
+        if (!response.ok) {
+          setMessage(getAdminErrorMessage(response, data))
+          setLogs([])
+          setTotalPages(1)
+          return
+        }
+
         setLogs(Array.isArray(data?.logs) ? data.logs : [])
         setTotalPages(data?.totalPages || 1)
       } catch (error) {
-        console.error('Failed to load activity logs:', error)
+        setMessage(error instanceof Error ? error.message : 'Failed to load activity logs')
       } finally {
         setLoading(false)
       }
     }
     loadLogs()
-  }, [filter, page])
+  }, [filter, page, pathname, router])
 
   const getActionLabel = (action: string): string => {
     const labels: Record<string, string> = {
@@ -82,6 +106,8 @@ export default function AdminActivityPage() {
               </Link>
             </div>
           </div>
+
+          {message ? <div className="notice" style={{ marginTop: 16 }}>{message}</div> : null}
 
           <div className="card" style={{ marginTop: 18 }}>
             <div style={{ marginBottom: 16 }}>

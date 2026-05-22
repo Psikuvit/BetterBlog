@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
+import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '../../../utils/admin-auth'
 
 type AdminUser = {
   id: string
@@ -22,16 +24,37 @@ export default function AdminUsersPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true)
+
+      if (!getAdminAccessToken()) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       try {
         const params = new URLSearchParams()
         params.set('page', page.toString())
         if (filter !== 'all') params.set('role', filter)
-        const response = await fetch(apiUrl(`/api/admin/users${params.toString() ? `?${params.toString()}` : ''}`))
-        const data = await response.json()
+        const response = await adminFetch(apiUrl(`/api/admin/users${params.toString() ? `?${params.toString()}` : ''}`))
+        const data = await response.json().catch(() => null)
+
+        if (response.status === 401) {
+          router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+          return
+        }
+
+        if (!response.ok) {
+          setMessage(getAdminErrorMessage(response, data))
+          setUsers([])
+          setTotalPages(1)
+          return
+        }
+
         setUsers(Array.isArray(data?.users) ? data.users : [])
         setTotalPages(data?.totalPages || 1)
       } catch (error) {
@@ -41,20 +64,26 @@ export default function AdminUsersPage() {
       }
     }
     loadUsers()
-  }, [filter, page])
+  }, [filter, page, pathname, router])
 
   const handlePromoteRole = async (userId: string, newRole: 'user' | 'moderator' | 'admin') => {
     setActionLoading(userId)
     try {
-      const response = await fetch(apiUrl(`/api/admin/users/${userId}`), {
+      const response = await adminFetch(apiUrl(`/api/admin/users/${userId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole }),
       })
 
+      const data = await response.json().catch(() => null)
+
+      if (response.status === 401) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       if (!response.ok) {
-        const data = await response.json()
-        setMessage(data?.error || 'Failed to update user')
+        setMessage(getAdminErrorMessage(response, data))
         return
       }
 

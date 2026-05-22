@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
+import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '../../../utils/admin-auth'
 
 type Config = {
   maxPostsPerUser: number
@@ -18,13 +20,33 @@ export default function AdminConfigPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const loadConfig = async () => {
       setLoading(true)
+
+      if (!getAdminAccessToken()) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       try {
-        const response = await fetch(apiUrl('/api/admin/config'))
-        const data = await response.json()
+        const response = await adminFetch(apiUrl('/api/admin/config'))
+        const data = await response.json().catch(() => null)
+
+        if (response.status === 401) {
+          router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+          return
+        }
+
+        if (!response.ok) {
+          setMessage(getAdminErrorMessage(response, data))
+          setConfig(null)
+          return
+        }
+
         setConfig(data?.config || null)
         setEdited({})
       } catch (error) {
@@ -34,21 +56,27 @@ export default function AdminConfigPage() {
       }
     }
     loadConfig()
-  }, [])
+  }, [pathname, router])
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSaving(true)
     try {
-      const response = await fetch(apiUrl('/api/admin/config'), {
+      const response = await adminFetch(apiUrl('/api/admin/config'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(edited),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
+
+      if (response.status === 401) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       if (!response.ok) {
-        setMessage(data?.error || 'Failed to save configuration')
+        setMessage(getAdminErrorMessage(response, data))
         return
       }
 
