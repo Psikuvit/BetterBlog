@@ -2,6 +2,7 @@ import { apiUrl } from '@/utils/api'
 
 export const ACCESS_TOKEN_STORAGE_KEY = 'betterblog_access_token'
 export const REFRESH_TOKEN_STORAGE_KEY = 'betterblog_refresh_token'
+export const AUTH_PERSISTENT_STORAGE_KEY = 'betterblog_auth_persistent'
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   LOGIN_IDENTIFIER_REQUIRED: 'Enter your email or username.',
@@ -15,17 +16,45 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   INTERNAL_SERVER_ERROR: 'The server hit an error. Try again in a moment.',
 }
 
+function getAuthStorage(rememberMe?: boolean): Storage | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  if (typeof rememberMe === 'boolean') {
+    return rememberMe ? window.localStorage : window.sessionStorage
+  }
+
+  const persistentFlag = window.localStorage.getItem(AUTH_PERSISTENT_STORAGE_KEY)
+  if (persistentFlag === 'true') {
+    return window.localStorage
+  }
+
+  if (persistentFlag === 'false') {
+    return window.sessionStorage
+  }
+
+  return window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY) || window.localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY) ? window.localStorage : window.sessionStorage
+}
+
 export function setAuthSession(token: string, refreshToken?: string, rememberMe = false): void {
   if (typeof window === 'undefined') {
     return
   }
 
-  window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token)
+  const storage = getAuthStorage(rememberMe) ?? window.localStorage
+  storage.setItem(ACCESS_TOKEN_STORAGE_KEY, token)
+  window.localStorage.setItem(AUTH_PERSISTENT_STORAGE_KEY, String(rememberMe))
+
+  const otherStorage = storage === window.localStorage ? window.sessionStorage : window.localStorage
+  otherStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY)
 
   if (refreshToken) {
-    window.localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken)
+    storage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken)
+    otherStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
   } else {
-    window.localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
+    storage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
+    otherStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
   }
 }
 
@@ -36,6 +65,9 @@ export function clearAuthSession(): void {
 
   window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY)
   window.localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
+  window.localStorage.removeItem(AUTH_PERSISTENT_STORAGE_KEY)
+  window.sessionStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY)
+  window.sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
 }
 
 function readStoredValue(name: string): string | null {
@@ -43,7 +75,7 @@ function readStoredValue(name: string): string | null {
     return null
   }
 
-  return window.localStorage.getItem(name)
+  return window.sessionStorage.getItem(name) || window.localStorage.getItem(name)
 }
 
 export function getClientAuthToken(): string | null {
@@ -233,15 +265,16 @@ export async function resolveAuthToken(): Promise<string | null> {
       return null
     }
 
-    const nextAccessToken = data?.token ?? data?.accessToken ?? data?.jwt ?? data?.access_token
-    const nextRefreshToken = data?.refreshToken ?? data?.refresh_token
+    const nextAccessToken = data?.accessToken
+    const nextRefreshToken = data?.refreshToken
 
     if (!nextAccessToken) {
       clearAuthSession()
       return null
     }
 
-    setAuthSession(String(nextAccessToken), nextRefreshToken ? String(nextRefreshToken) : refreshToken)
+    const rememberMe = window.localStorage.getItem(AUTH_PERSISTENT_STORAGE_KEY) === 'true'
+    setAuthSession(String(nextAccessToken), nextRefreshToken ? String(nextRefreshToken) : refreshToken, rememberMe)
     return String(nextAccessToken)
   } catch {
     return null
