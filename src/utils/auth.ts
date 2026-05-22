@@ -1,6 +1,18 @@
 export const ACCESS_TOKEN_COOKIE = 'betterblog_access_token'
 export const REFRESH_TOKEN_COOKIE = 'betterblog_refresh_token'
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  LOGIN_IDENTIFIER_REQUIRED: 'Enter your email or username.',
+  USER_NOT_FOUND: 'No account matches those credentials.',
+  USER_DISABLED: 'This account is disabled.',
+  INVALID_PASSWORD: 'Incorrect password.',
+  INVALID_TOKEN: 'Your session is no longer valid. Please log in again.',
+  VALIDATION_FAILED: 'Please check the form for missing or invalid fields.',
+  ALREADY_EXISTS: 'An account with those details already exists.',
+  RATE_LIMIT_EXCEEDED: 'Too many attempts. Please try again later.',
+  INTERNAL_SERVER_ERROR: 'The server hit an error. Try again in a moment.',
+}
+
 const THIRTY_DAYS_IN_SECONDS = 60 * 60 * 24 * 30
 
 function buildCookie(name: string, value: string, maxAgeSeconds?: number): string {
@@ -77,6 +89,28 @@ export async function debugFetch(input: RequestInfo | URL, init: RequestInit = {
   })
 
   return fetch(input, init)
+}
+
+type ApiErrorPayload = {
+  code?: string
+  errorCode?: string
+  error?: string
+  message?: string
+}
+
+export function getAuthErrorMessage(payload: unknown, fallback = 'Request failed'): string {
+  if (!payload || typeof payload !== 'object') {
+    return fallback
+  }
+
+  const errorPayload = payload as ApiErrorPayload
+  const code = errorPayload.code || errorPayload.errorCode || errorPayload.error
+
+  if (code && AUTH_ERROR_MESSAGES[code]) {
+    return AUTH_ERROR_MESSAGES[code]
+  }
+
+  return errorPayload.message || errorPayload.error || fallback
 }
 
 export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {

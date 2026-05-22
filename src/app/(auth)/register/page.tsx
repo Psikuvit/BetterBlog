@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
-import { debugFetch, setAuthSession } from '@/utils/auth'
+import { debugFetch, getAuthErrorMessage, setAuthSession } from '@/utils/auth'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -25,7 +25,7 @@ export default function RegisterPage() {
     const data = await res.json().catch(() => null)
 
     if (!res.ok) {
-      setMessage(data?.error || 'Registration failed')
+      setMessage(getAuthErrorMessage(data, 'Registration failed'))
       return
     }
 

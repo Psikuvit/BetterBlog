@@ -3,7 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
-import { debugFetch, setAuthSession } from '@/utils/auth'
+import { debugFetch, getAuthErrorMessage, setAuthSession } from '@/utils/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -43,7 +43,7 @@ export default function LoginPage() {
       const data = await response.json().catch(() => null)
 
       if (!response.ok) {
-        setMsg(data?.error || 'Login failed')
+        setMsg(getAuthErrorMessage(data, 'Login failed'))
         return
       }
 
