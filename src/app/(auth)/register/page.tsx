@@ -1,10 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
+import { setAuthSession } from '@/utils/auth'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,7 +23,14 @@ export default function RegisterPage() {
     })
 
     const data = await res.json().catch(() => null)
-    setMessage(res.ok ? 'Account created' : data?.error || 'Registration failed')
+
+    if (!res.ok) {
+      setMessage(data?.error || 'Registration failed')
+      return
+    }
+
+    setAuthSession(data?.token, data?.refreshToken)
+    router.replace('/posts')
   }
 
   return (
@@ -40,17 +50,17 @@ export default function RegisterPage() {
             <div className="grid-2">
               <div className="field">
                 <label htmlFor="username">Username</label>
-                <input id="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="sam" />
+                <input id="username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="sam" />
               </div>
               <div className="field">
                 <label htmlFor="email">Email</label>
-                <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="sam@example.com" />
+                <input id="email" autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="sam@example.com" />
               </div>
             </div>
 
             <div className="field">
               <label htmlFor="password">Password</label>
-              <input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" />
+              <input id="password" autoComplete="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" />
             </div>
 
             <div className="actions">

@@ -1,14 +1,19 @@
 "use client"
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
+import { setAuthSession } from '@/utils/auth'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
+  const redirectTo = searchParams.get('redirect') || '/posts'
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -21,7 +26,14 @@ export default function LoginPage() {
       })
 
       const data = await response.json().catch(() => null)
-      setMsg(response.ok ? 'Login successful' : data?.error || 'Login failed')
+
+      if (!response.ok) {
+        setMsg(data?.error || 'Login failed')
+        return
+      }
+
+      setAuthSession(data?.token, data?.refreshToken, rememberMe)
+      router.replace(redirectTo)
     } catch (err: unknown) {
       setMsg(err instanceof Error ? err.message : 'Error')
     } finally {
@@ -45,12 +57,12 @@ export default function LoginPage() {
           <form className="form" onSubmit={handleLogin} style={{ marginTop: 24 }}>
             <div className="field">
               <label htmlFor="email">Email</label>
-              <input id="email" placeholder="sam@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input id="email" autoComplete="email" placeholder="sam@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
 
             <div className="field">
               <label htmlFor="password">Password</label>
-              <input id="password" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input id="password" autoComplete="current-password" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -70,7 +82,7 @@ export default function LoginPage() {
 
           <div className="card" style={{ marginTop: 18 }}>
             <h2>Session</h2>
-            <p className="muted">Session management will be available once backend is connected.</p>
+            <p className="muted">Protected routes now require a verified session token.</p>
             {msg ? <p className="notice" style={{ marginTop: 12 }}>{msg}</p> : null}
           </div>
         </div>
