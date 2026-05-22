@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
+import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '../../utils/admin-auth'
 
 type Stats = {
   totalUsers: number
@@ -16,21 +18,41 @@ type Stats = {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const loadStats = async () => {
+      if (!getAdminAccessToken()) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+        return
+      }
+
       try {
-        const response = await fetch(apiUrl('/api/admin/stats'))
-        const data = await response.json()
+        const response = await adminFetch(apiUrl('/api/admin/stats'))
+        const data = await response.json().catch(() => null)
+
+        if (response.status === 401) {
+          router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+          return
+        }
+
+        if (!response.ok) {
+          setMessage(getAdminErrorMessage(response, data))
+          setStats(null)
+          return
+        }
+
         setStats(data?.stats || null)
       } catch (error) {
-        console.error('Failed to load stats:', error)
+        setMessage(error instanceof Error ? error.message : 'Failed to load stats')
       } finally {
         setLoading(false)
       }
     }
     loadStats()
-  }, [])
+  }, [pathname, router])
 
   return (
     <main className="shell">
@@ -46,6 +68,8 @@ export default function AdminDashboard() {
               <p className="lede">Manage users, posts, content moderation, and system configuration.</p>
             </div>
           </div>
+
+          {message ? <div className="notice" style={{ marginTop: 16 }}>{message}</div> : null}
 
           {loading ? (
             <p className="muted">Loading dashboard...</p>
