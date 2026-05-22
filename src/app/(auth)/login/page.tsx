@@ -3,7 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
-import { setAuthSession } from '@/utils/auth'
+import { debugFetch, setAuthSession } from '@/utils/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -29,7 +29,7 @@ export default function LoginPage() {
     setLoading(true)
     setMsg('')
     try {
-      const response = await fetch(apiUrl('/api/auth/login'), {
+      const response = await debugFetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -47,7 +47,15 @@ export default function LoginPage() {
         return
       }
 
-      setAuthSession(data?.token, data?.refreshToken, rememberMeValue)
+      const accessToken = data?.token ?? data?.accessToken ?? data?.jwt ?? data?.access_token
+      const refreshToken = data?.refreshToken ?? data?.refresh_token
+
+      if (!accessToken) {
+        setMsg('Login succeeded, but the backend did not return an access token')
+        return
+      }
+
+      setAuthSession(String(accessToken), refreshToken ? String(refreshToken) : undefined, rememberMeValue)
       router.replace(redirectTo)
     } catch (err: unknown) {
       setMsg(err instanceof Error ? err.message : 'Error')

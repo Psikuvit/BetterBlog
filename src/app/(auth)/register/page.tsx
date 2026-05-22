@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
-import { setAuthSession } from '@/utils/auth'
+import { debugFetch, setAuthSession } from '@/utils/auth'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -16,7 +16,7 @@ export default function RegisterPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const res = await fetch(apiUrl('/api/auth/register'), {
+    const res = await debugFetch(apiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password }),
@@ -29,7 +29,15 @@ export default function RegisterPage() {
       return
     }
 
-    setAuthSession(data?.token, data?.refreshToken)
+    const accessToken = data?.token ?? data?.accessToken ?? data?.jwt ?? data?.access_token
+    const refreshToken = data?.refreshToken ?? data?.refresh_token
+
+    if (!accessToken) {
+      setMessage('Account created, but the backend did not return an access token')
+      return
+    }
+
+    setAuthSession(String(accessToken), refreshToken ? String(refreshToken) : undefined)
     router.replace('/posts')
   }
 

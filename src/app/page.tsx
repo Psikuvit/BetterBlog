@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
-import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from '@/utils/auth'
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, debugFetch } from '@/utils/auth'
 
 type CurrentUser = {
   username?: string | null
@@ -20,7 +20,7 @@ async function getCurrentUser(): Promise<CurrentUser | null> {
   }
 
   try {
-    const response = await fetch(apiUrl('/api/auth/me'), {
+    const response = await debugFetch(apiUrl('/api/auth/me'), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

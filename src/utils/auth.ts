@@ -38,3 +38,58 @@ export function clearAuthSession(): void {
   document.cookie = `${ACCESS_TOKEN_COOKIE}=; path=/; max-age=0; sameSite=lax`
   document.cookie = `${REFRESH_TOKEN_COOKIE}=; path=/; max-age=0; sameSite=lax`
 }
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') {
+    return null
+  }
+
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+export function getClientAuthToken(): string | null {
+  return readCookie(ACCESS_TOKEN_COOKIE)
+}
+
+function getBodyPreview(body: RequestInit['body']): string {
+  if (typeof body === 'string') {
+    return body
+  }
+
+  if (body instanceof URLSearchParams) {
+    return body.toString()
+  }
+
+  return body ? '[non-string body]' : ''
+}
+
+export async function debugFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const method = (init.method || 'GET').toUpperCase()
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+  const headers = new Headers(init.headers)
+
+  console.log('[request]', {
+    method,
+    url,
+    headers: Object.fromEntries(headers.entries()),
+    body: getBodyPreview(init.body) || undefined,
+  })
+
+  return fetch(input, init)
+}
+
+export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers)
+  const token = getClientAuthToken()
+
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  return debugFetch(input, {
+    ...init,
+    headers,
+  })
+}
+

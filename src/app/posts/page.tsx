@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { apiUrl } from '@/utils/api'
+import { authFetch } from '@/utils/auth'
 
 type PostItem = {
   id: string
@@ -41,7 +42,7 @@ export default function PostsPage() {
       const params = new URLSearchParams()
       if (query) params.set('q', query)
       if (tag) params.set('tag', tag)
-      const response = await fetch(apiUrl(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`))
+      const response = await authFetch(apiUrl(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`))
       const data = await response.json()
       setPosts(Array.isArray(data?.posts) ? data.posts : [])
       setSelectedIds([])
@@ -54,7 +55,6 @@ export default function PostsPage() {
 
   useEffect(() => {
     void loadPosts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const filteredCount = useMemo(() => posts.length, [posts])
@@ -65,7 +65,7 @@ export default function PostsPage() {
 
   const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) return
-    const response = await fetch(apiUrl('/api/posts'), {
+    const response = await authFetch(apiUrl('/api/posts'), {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: selectedIds }),
@@ -87,7 +87,7 @@ export default function PostsPage() {
     if (tag) params.set('tags', tag)
     if (query) params.set('q', query)
 
-    const response = await fetch(apiUrl(`/api/posts/export?${params.toString()}`), {
+    const response = await authFetch(apiUrl(`/api/posts/export?${params.toString()}`), {
       method: 'POST',
     })
 
@@ -109,7 +109,7 @@ export default function PostsPage() {
   }
 
   const handleImport = async () => {
-    const response = await fetch(apiUrl('/api/posts/import'), {
+    const response = await authFetch(apiUrl('/api/posts/import'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ format: importFormat, payload: importPayload }),
