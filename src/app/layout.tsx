@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthGate } from '@/components/auth-gate'
 
 export const metadata: Metadata = {
   title: 'BetterBlog',
@@ -14,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <AuthGate>{children}</AuthGate>
       </body>
     </html>
   )
