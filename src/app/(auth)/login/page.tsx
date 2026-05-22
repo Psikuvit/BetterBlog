@@ -8,8 +8,6 @@ import { setAuthSession } from '@/utils/auth'
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,12 +15,29 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    const formData = new FormData(e.currentTarget)
+    const identifier = String(formData.get('identifier') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+    const rememberMeValue = formData.get('rememberMe') === 'on'
+
+    if (!identifier || !password) {
+      setMsg('Enter an email or username and password')
+      return
+    }
+
     setLoading(true)
+    setMsg('')
     try {
       const response = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, rememberMe }),
+        body: JSON.stringify({
+          email: identifier,
+          username: identifier,
+          password,
+          rememberMe: rememberMeValue,
+        }),
       })
 
       const data = await response.json().catch(() => null)
@@ -32,7 +47,7 @@ export default function LoginPage() {
         return
       }
 
-      setAuthSession(data?.token, data?.refreshToken, rememberMe)
+      setAuthSession(data?.token, data?.refreshToken, rememberMeValue)
       router.replace(redirectTo)
     } catch (err: unknown) {
       setMsg(err instanceof Error ? err.message : 'Error')
@@ -56,17 +71,17 @@ export default function LoginPage() {
 
           <form className="form" onSubmit={handleLogin} style={{ marginTop: 24 }}>
             <div className="field">
-              <label htmlFor="email">Email</label>
-              <input id="email" autoComplete="email" placeholder="sam@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label htmlFor="identifier">Email or username</label>
+              <input id="identifier" name="identifier" autoComplete="username" placeholder="sam@example.com or sam" required />
             </div>
 
             <div className="field">
               <label htmlFor="password">Password</label>
-              <input id="password" autoComplete="current-password" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input id="password" name="password" autoComplete="current-password" placeholder="Password" type="password" required />
             </div>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+              <input name="rememberMe" type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
               Remember me for 30 days
             </label>
 
