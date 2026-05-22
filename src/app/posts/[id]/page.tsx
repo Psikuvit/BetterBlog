@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
+import { authFetch, getAuthErrorMessage } from '@/utils/auth'
 
 type PostDetail = {
   id: string
@@ -44,7 +45,7 @@ export default function PostDetailPage() {
   const [excerpt, setExcerpt] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
-  const [visibility, setVisibility] = useState('public')
+  const [visibility, setVisibility] = useState('PUBLIC')
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
   const [message, setMessage] = useState('')
@@ -53,11 +54,11 @@ export default function PostDetailPage() {
   useEffect(() => {
     const loadPost = async () => {
       setLoading(true)
-      const response = await fetch(apiUrl(`/api/posts/${id}`))
-      const data = await response.json()
+      const response = await authFetch(apiUrl(`/api/posts/${id}`))
+      const data = await response.json().catch(() => null)
       if (!response.ok) {
         setPost(null)
-        setMessage(data?.error || 'Post not found')
+        setMessage(getAuthErrorMessage(data, 'Post not found'))
         setLoading(false)
         return
       }
@@ -68,7 +69,7 @@ export default function PostDetailPage() {
       setExcerpt(data.post.excerpt)
       setContent(data.post.content)
       setTags((data.post.tags || []).join(', '))
-      setVisibility(data.post.visibility)
+      setVisibility(data.post.visibility || 'PUBLIC')
       setCoverImageUrl(data.post.coverImageUrl || '')
       setSourceUrl(data.post.sourceUrl || '')
       setLoading(false)
@@ -79,24 +80,26 @@ export default function PostDetailPage() {
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const response = await fetch(apiUrl(`/api/posts/${id}`), {
+    const buildPostBody = () => ({
+      title,
+      slug,
+      content,
+      visibility: visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC',
+      ...(excerpt ? { excerpt } : {}),
+      tags: tagList(tags),
+      ...(coverImageUrl ? { coverImageUrl } : {}),
+      ...(sourceUrl ? { sourceUrl } : {}),
+    })
+
+    const response = await authFetch(apiUrl(`/api/posts/${id}`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        slug,
-        excerpt,
-        content,
-        tags: tagList(tags),
-        visibility,
-        coverImageUrl,
-        sourceUrl,
-      }),
+      body: JSON.stringify(buildPostBody()),
     })
 
     const data = await response.json().catch(() => null)
     if (!response.ok) {
-      setMessage(data?.error || 'Save failed')
+      setMessage(getAuthErrorMessage(data, 'Save failed'))
       return
     }
 
@@ -105,10 +108,10 @@ export default function PostDetailPage() {
   }
 
   const handleDelete = async () => {
-    const response = await fetch(apiUrl(`/api/posts/${id}`), { method: 'DELETE' })
+    const response = await authFetch(apiUrl(`/api/posts/${id}`), { method: 'DELETE' })
     if (!response.ok) {
       const data = await response.json().catch(() => null)
-      setMessage(data?.error || 'Delete failed')
+      setMessage(getAuthErrorMessage(data, 'Delete failed'))
       return
     }
 

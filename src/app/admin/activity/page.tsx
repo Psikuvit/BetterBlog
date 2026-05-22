@@ -20,7 +20,8 @@ type AdminActivityLog = {
 
 export default function AdminActivityPage() {
   const [logs, setLogs] = useState<AdminActivityLog[]>([])
-  const [filter, setFilter] = useState('all')
+  const [severity, setSeverity] = useState('')
+  const [username, setUsername] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -46,7 +47,8 @@ export default function AdminActivityPage() {
       try {
         const params = new URLSearchParams()
         params.set('page', page.toString())
-        if (filter !== 'all') params.set('severity', filter)
+        if (severity) params.set('severity', severity)
+        if (username) params.set('username', username)
         const response = await adminFetch(apiUrl(`/api/admin/activity${params.toString() ? `?${params.toString()}` : ''}`))
         const data = await response.json().catch(() => null)
 
@@ -71,7 +73,7 @@ export default function AdminActivityPage() {
       }
     }
     loadLogs()
-  }, [filter, page, pathname, router])
+  }, [severity, username, page, pathname, router])
 
   const getActionLabel = (action: string): string => {
     const labels: Record<string, string> = {
@@ -110,20 +112,27 @@ export default function AdminActivityPage() {
           {message ? <div className="notice" style={{ marginTop: 16 }}>{message}</div> : null}
 
           <div className="card" style={{ marginTop: 18 }}>
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
               <select
-                value={filter}
+                value={severity}
                 onChange={(e) => {
-                  setFilter(e.target.value)
+                  setSeverity(e.target.value)
                   setPage(1)
                 }}
                 style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(30, 27, 24, 0.12)' }}
               >
-                <option value="all">All events</option>
+                <option value="">All severities</option>
                 <option value="info">Information</option>
                 <option value="warning">Warnings</option>
                 <option value="critical">Critical</option>
               </select>
+
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Filter by username"
+                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(30, 27, 24, 0.12)' }}
+              />
             </div>
 
             {loading ? (

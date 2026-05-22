@@ -10,7 +10,7 @@ type AdminUser = {
   id: string
   username: string
   email: string
-  role: 'user' | 'moderator' | 'admin'
+  role: 'USER' | 'MODERATOR' | 'ADMIN'
   createdAt: string
   postsCount: number
   lastLoginAt?: string
@@ -39,7 +39,7 @@ export default function AdminUsersPage() {
       try {
         const params = new URLSearchParams()
         params.set('page', page.toString())
-        if (filter !== 'all') params.set('role', filter)
+        if (filter !== 'all') params.set('role', filter.toUpperCase())
         const response = await adminFetch(apiUrl(`/api/admin/users${params.toString() ? `?${params.toString()}` : ''}`))
         const data = await response.json().catch(() => null)
 
@@ -66,7 +66,7 @@ export default function AdminUsersPage() {
     loadUsers()
   }, [filter, page, pathname, router])
 
-  const handlePromoteRole = async (userId: string, newRole: 'user' | 'moderator' | 'admin') => {
+  const handlePromoteRole = async (userId: string, newRole: 'USER' | 'MODERATOR' | 'ADMIN') => {
     setActionLoading(userId)
     try {
       const response = await adminFetch(apiUrl(`/api/admin/users/${userId}`), {
@@ -101,9 +101,9 @@ export default function AdminUsersPage() {
   }
 
   const roleColors: Record<string, string> = {
-    user: 'rgba(107, 114, 128, 0.2)',
-    moderator: 'rgba(251, 146, 60, 0.2)',
-    admin: 'rgba(239, 68, 68, 0.2)',
+    USER: 'rgba(107, 114, 128, 0.2)',
+    MODERATOR: 'rgba(251, 146, 60, 0.2)',
+    ADMIN: 'rgba(239, 68, 68, 0.2)',
   }
 
   return (
@@ -198,7 +198,7 @@ export default function AdminUsersPage() {
                         <td style={{ padding: 12 }}>
                           <select
                             value={user.role}
-                            onChange={(e) => handlePromoteRole(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
+                            onChange={(e) => handlePromoteRole(user.id, e.target.value.toUpperCase() as 'USER' | 'MODERATOR' | 'ADMIN')}
                             disabled={actionLoading === user.id}
                             style={{
                               padding: '4px 8px',
@@ -207,9 +207,9 @@ export default function AdminUsersPage() {
                               border: '1px solid rgba(30, 27, 24, 0.12)',
                             }}
                           >
-                            <option value="user">User</option>
-                            <option value="moderator">Moderator</option>
-                            <option value="admin">Admin</option>
+                            <option value="USER">User</option>
+                            <option value="MODERATOR">Moderator</option>
+                            <option value="ADMIN">Admin</option>
                           </select>
                         </td>
                       </tr>

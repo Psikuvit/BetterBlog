@@ -36,9 +36,17 @@ export function getAdminErrorMessage(response: Response, payload: unknown): stri
     return 'Admin access required'
   }
 
+  if (response.status === 404) {
+    return 'Resource not found'
+  }
+
+  if (response.status === 400) {
+    return 'Invalid request'
+  }
+
   if (payload && typeof payload === 'object') {
     const errorPayload = payload as ErrorPayload
-    return errorPayload.error || errorPayload.message || 'Request failed'
+    return errorPayload.message || errorPayload.error || 'Request failed'
   }
 
   return 'Request failed'

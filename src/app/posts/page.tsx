@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { apiUrl } from '@/utils/api'
-import { authFetch } from '@/utils/auth'
+import { authFetch, getAuthErrorMessage } from '@/utils/auth'
 
 type PostItem = {
   id: string
@@ -43,7 +43,7 @@ export default function PostsPage() {
       if (query) params.set('q', query)
       if (tag) params.set('tag', tag)
       const response = await authFetch(apiUrl(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`))
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
       setPosts(Array.isArray(data?.posts) ? data.posts : [])
       setSelectedIds([])
     } catch (error) {
@@ -73,7 +73,7 @@ export default function PostsPage() {
 
     const data = await response.json().catch(() => null)
     if (!response.ok) {
-      setMessage(data?.error || 'Delete failed')
+      setMessage(getAuthErrorMessage(data, 'Delete failed'))
       return
     }
 
@@ -93,7 +93,7 @@ export default function PostsPage() {
 
     if (!response.ok) {
       const data = await response.json().catch(() => null)
-      setMessage(data?.error || 'Export failed')
+      setMessage(getAuthErrorMessage(data, 'Export failed'))
       return
     }
 
@@ -117,7 +117,7 @@ export default function PostsPage() {
 
     const data = await response.json().catch(() => null)
     if (!response.ok) {
-      setMessage(data?.error || 'Import failed')
+      setMessage(getAuthErrorMessage(data, 'Import failed'))
       return
     }
 

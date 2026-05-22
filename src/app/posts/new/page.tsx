@@ -26,7 +26,7 @@ export default function NewPostPage() {
   const [excerpt, setExcerpt] = useState('')
   const [content, setContent] = useState('<p>Write your post here.</p>')
   const [tags, setTags] = useState('')
-  const [visibility, setVisibility] = useState('public')
+  const [visibility, setVisibility] = useState('PUBLIC')
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
   const [originalAuthor, setOriginalAuthor] = useState('')
@@ -43,7 +43,7 @@ export default function NewPostPage() {
 
     try {
       const response = await fetch(apiUrl(`/api/posts/preview?url=${encodeURIComponent(urlValue)}`))
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
       setPreview(response.ok ? data.preview : null)
     } catch {
       setPreview(null)
@@ -63,21 +63,23 @@ export default function NewPostPage() {
     setLoading(true)
     setMessage('')
 
-    const response = await fetch(apiUrl('/api/posts'), {
+    const buildPostBody = () => ({
+      title,
+      slug,
+      content,
+      visibility: visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC',
+      ...(excerpt ? { excerpt } : {}),
+      tags: tagList(tags),
+      ...(coverImageUrl ? { coverImageUrl } : {}),
+      ...(sourceUrl ? { sourceUrl } : {}),
+      ...(originalAuthor ? { originalAuthor } : {}),
+      ...(legacyId ? { legacyId } : {}),
+    })
+
+    const response = await authFetch(apiUrl('/api/posts'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        slug,
-        excerpt,
-        content,
-        tags: tagList(tags),
-        visibility,
-        coverImageUrl,
-        sourceUrl,
-        originalAuthor,
-        legacyId,
-      }),
+      body: JSON.stringify(buildPostBody()),
     })
 
     const data = await response.json().catch(() => null)
@@ -118,19 +120,18 @@ export default function NewPostPage() {
                 <div className="form">
                   <div className="field">
                     <label htmlFor="title">Title</label>
-                    <input id="title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="My first post" />
+                    <input id="title" required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="My first post" />
                   </div>
                   <div className="grid-2">
                     <div className="field">
                       <label htmlFor="slug">Slug</label>
-                      <input id="slug" value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="my-first-post" />
+                      <input id="slug" required value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="my-first-post" />
                     </div>
                     <div className="field">
                       <label htmlFor="visibility">Visibility</label>
                       <select id="visibility" value={visibility} onChange={(event) => setVisibility(event.target.value)}>
-                        <option value="public">Public</option>
-                        <option value="private">Private</option>
-                        <option value="admin-private">Admin private</option>
+                        <option value="PUBLIC">Public</option>
+                        <option value="PRIVATE">Private</option>
                       </select>
                     </div>
                   </div>
@@ -140,7 +141,7 @@ export default function NewPostPage() {
                   </div>
                   <div className="field">
                     <label htmlFor="content">HTML content</label>
-                    <textarea id="content" value={content} onChange={(event) => setContent(event.target.value)} />
+                    <textarea id="content" required value={content} onChange={(event) => setContent(event.target.value)} />
                   </div>
                   <div className="field">
                     <label htmlFor="tags">Tags</label>

@@ -29,15 +29,17 @@ function LoginForm() {
     setLoading(true)
     setMsg('')
     try {
+      const body: Record<string, string> = { password }
+      if (identifier.includes('@')) {
+        body.email = identifier
+      } else {
+        body.username = identifier
+      }
+
       const response = await debugFetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: identifier,
-          username: identifier,
-          password,
-          rememberMe: rememberMeValue,
-        }),
+        body: JSON.stringify(body),
       })
 
       const data = await response.json().catch(() => null)

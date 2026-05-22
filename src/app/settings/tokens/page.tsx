@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
+import { authFetch, getAuthErrorMessage } from '@/utils/auth'
 
 type APIToken = {
   id: string
@@ -41,8 +42,13 @@ export default function TokensPage() {
     const loadTokens = async () => {
       setLoading(true)
       try {
-        const response = await fetch(apiUrl('/api/tokens'))
-        const data = await response.json()
+        const response = await authFetch(apiUrl('/api/tokens'))
+        const data = await response.json().catch(() => null)
+        if (!response.ok) {
+          setMessage(getAuthErrorMessage(data, 'Failed to load tokens'))
+          setTokens([])
+          return
+        }
         setTokens(Array.isArray(data?.tokens) ? data.tokens : [])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load tokens')
@@ -62,7 +68,7 @@ export default function TokensPage() {
 
     setCreating(true)
     try {
-      const response = await fetch(apiUrl('/api/tokens'), {
+      const response = await authFetch(apiUrl('/api/tokens'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -72,9 +78,9 @@ export default function TokensPage() {
         }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
       if (!response.ok) {
-        setMessage(data?.error || 'Failed to create token')
+        setMessage(getAuthErrorMessage(data, 'Failed to create token'))
         return
       }
 
@@ -95,13 +101,13 @@ export default function TokensPage() {
     if (!confirm('Revoke this token?')) return
 
     try {
-      const response = await fetch(apiUrl(`/api/tokens/${tokenId}`), {
+      const response = await authFetch(apiUrl(`/api/tokens/${tokenId}`), {
         method: 'DELETE',
       })
 
       if (!response.ok) {
-        const data = await response.json()
-        setMessage(data?.error || 'Failed to revoke token')
+        const data = await response.json().catch(() => null)
+        setMessage(getAuthErrorMessage(data, 'Failed to revoke token'))
         return
       }
 

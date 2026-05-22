@@ -63,8 +63,8 @@ export function SessionBadge() {
       style={{ display: 'inline-flex', alignItems: 'center', gap: 10, pointerEvents: 'none' }}
       aria-label={`Logged in as ${avatarLabel}`}
     >
-      {user.avatarUrl ? (
-        <Image src={user.avatarUrl} alt={avatarLabel} width={24} height={24} style={{ borderRadius: 9999, objectFit: 'cover' }} />
+      {user.profilePictureUrl ? (
+        <Image src={user.profilePictureUrl} alt={avatarLabel} width={24} height={24} style={{ borderRadius: 9999, objectFit: 'cover' }} />
       ) : (
         <span
           aria-hidden="true"

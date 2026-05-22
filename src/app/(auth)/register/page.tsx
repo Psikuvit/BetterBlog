@@ -16,6 +16,11 @@ export default function RegisterPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
+    if (!username || !email || !password) {
+      setMessage('Username, email, and password are required')
+      return
+    }
+
     const res = await debugFetch(apiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

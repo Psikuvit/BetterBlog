@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
+import { authFetch, getAuthErrorMessage } from '@/utils/auth'
 
 type TemporaryLink = {
   id: string
@@ -35,11 +36,17 @@ export default function SharingPage() {
       setLoading(true)
       try {
         const [linksRes, postsRes] = await Promise.all([
-          fetch(apiUrl('/api/sharing/links')),
-          fetch(apiUrl('/api/posts?limit=100')),
+          authFetch(apiUrl('/api/sharing/links')),
+          authFetch(apiUrl('/api/posts?limit=100')),
         ])
-        const linksData = await linksRes.json()
-        const postsData = await postsRes.json()
+        const linksData = await linksRes.json().catch(() => null)
+        const postsData = await postsRes.json().catch(() => null)
+
+        if (!linksRes.ok || !postsRes.ok) {
+          setMessage(getAuthErrorMessage(linksData || postsData, 'Failed to load data'))
+          return
+        }
+
         setLinks(Array.isArray(linksData?.links) ? linksData.links : [])
         setPosts(Array.isArray(postsData?.posts) ? postsData.posts : [])
       } catch (error) {
@@ -60,19 +67,19 @@ export default function SharingPage() {
 
     setCreating(true)
     try {
-      const response = await fetch(apiUrl('/api/sharing/links'), {
+      const response = await authFetch(apiUrl('/api/sharing/links'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           postId: selectedPostId,
           expiresIn,
-          maxAccess: maxAccess ? parseInt(maxAccess) : undefined,
+          ...(maxAccess ? { maxAccess: Number(maxAccess) } : {}),
         }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
       if (!response.ok) {
-        setMessage(data?.error || 'Failed to create link')
+        setMessage(getAuthErrorMessage(data, 'Failed to create link'))
         return
       }
 
@@ -92,13 +99,13 @@ export default function SharingPage() {
     if (!confirm('Revoke this link?')) return
 
     try {
-      const response = await fetch(apiUrl(`/api/sharing/links/${linkId}`), {
+      const response = await authFetch(apiUrl(`/api/sharing/links/${linkId}`), {
         method: 'DELETE',
       })
 
       if (!response.ok) {
-        const data = await response.json()
-        setMessage(data?.error || 'Failed to revoke link')
+        const data = await response.json().catch(() => null)
+        setMessage(getAuthErrorMessage(data, 'Failed to revoke link'))
         return
       }
 
