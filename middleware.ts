@@ -1,16 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from './src/utils/auth'
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "./src/utils/auth"
 
-const PUBLIC_PATHS = ['/', '/login', '/register', '/reset-password']
-const PUBLIC_PREFIXES = ['/profile/']
-const PROTECTED_PREFIXES = ['/activity', '/admin', '/posts', '/settings']
+const PUBLIC_PATHS = ['/login', '/register', '/reset-password']
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.includes(pathname) || PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-}
-
-function isProtectedPath(pathname: string): boolean {
-  return PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  return PUBLIC_PATHS.includes(pathname)
 }
 
 async function verifyAuthToken(token: string): Promise<boolean> {
@@ -33,7 +27,7 @@ async function verifyAuthToken(token: string): Promise<boolean> {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
-  if (isPublicPath(pathname) || !isProtectedPath(pathname)) {
+  if (isPublicPath(pathname)) {
     return NextResponse.next()
   }
 
