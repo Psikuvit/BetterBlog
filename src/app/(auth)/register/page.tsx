@@ -29,8 +29,8 @@ export default function RegisterPage() {
       return
     }
 
-    const accessToken = data?.token ?? data?.accessToken ?? data?.jwt ?? data?.access_token
-    const refreshToken = data?.refreshToken ?? data?.refresh_token
+    const accessToken = data?.accessToken
+    const refreshToken = data?.refreshToken
 
     if (!accessToken) {
       setMessage('Account created, but the backend did not return an access token')

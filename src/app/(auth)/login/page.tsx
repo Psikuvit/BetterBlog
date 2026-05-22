@@ -1,11 +1,11 @@
 "use client"
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
 import { debugFetch, getAuthErrorMessage, setAuthSession } from '@/utils/auth'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [rememberMe, setRememberMe] = useState(false)
@@ -47,8 +47,8 @@ export default function LoginPage() {
         return
       }
 
-      const accessToken = data?.token ?? data?.accessToken ?? data?.jwt ?? data?.access_token
-      const refreshToken = data?.refreshToken ?? data?.refresh_token
+      const accessToken = data?.accessToken
+      const refreshToken = data?.refreshToken
 
       if (!accessToken) {
         setMsg('Login succeeded, but the backend did not return an access token')
@@ -111,5 +111,13 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }
