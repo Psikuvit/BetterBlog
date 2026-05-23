@@ -67,6 +67,17 @@ export default function AdminDashboard() {
               <h1 className="page-title">Admin Dashboard</h1>
               <p className="lede">Manage users, posts, content moderation, and system configuration.</p>
             </div>
+            <div className="actions">
+              <Link className="button-secondary" href="/">
+                Home
+              </Link>
+              <Link className="button-secondary" href="/admin/posts">
+                Posts
+              </Link>
+              <Link className="button-secondary" href="/admin/users">
+                Users
+              </Link>
+            </div>
           </div>
 
           {message ? <div className="notice" style={{ marginTop: 16 }}>{message}</div> : null}
@@ -155,6 +166,27 @@ export default function AdminDashboard() {
                     Manage system settings and application configuration.
                   </p>
                 </Link>
+              </div>
+
+              <div className="card" style={{ marginTop: 24 }}>
+                <h2 style={{ marginTop: 0 }}>Admin pages</h2>
+                <div className="actions">
+                  <Link className="button-secondary" href="/admin/posts">
+                    Post management
+                  </Link>
+                  <Link className="button-secondary" href="/admin/users">
+                    User management
+                  </Link>
+                  <Link className="button-secondary" href="/admin/moderators">
+                    Moderators
+                  </Link>
+                  <Link className="button-secondary" href="/admin/activity">
+                    Activity logs
+                  </Link>
+                  <Link className="button-secondary" href="/admin/config">
+                    Configuration
+                  </Link>
+                </div>
               </div>
             </>
           ) : (
