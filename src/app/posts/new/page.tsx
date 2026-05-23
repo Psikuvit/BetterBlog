@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
+import { authFetch } from '@/utils/auth'
 
 type PreviewData = {
   url: string
