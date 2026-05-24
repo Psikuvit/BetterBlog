@@ -3,34 +3,52 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiUrl } from '@/utils/api'
+import { debugFetch, getAuthErrorMessage } from '@/utils/auth'
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('')
-  const [token, setToken] = useState('')
+  const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const requestReset = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const res = await fetch(apiUrl('/api/auth/password-reset/request'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    })
-    const data = await res.json().catch(() => null)
-    setToken(data?.resetToken || '')
-    setMessage(res.ok ? 'Reset requested' : data?.error || 'Request failed')
-  }
 
-  const confirmReset = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const res = await fetch(apiUrl('/api/auth/password-reset/confirm'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, newPassword: password }),
-    })
-    const data = await res.json().catch(() => null)
-    setMessage(res.ok ? 'Password updated' : data?.error || 'Confirm failed')
+    if (!email.trim() || !code.trim() || !password) {
+      setMessage('Email, reset code, and new password are required.')
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const response = await debugFetch(apiUrl('/api/auth/reset-password'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          code: code.trim(),
+          newPassword: password,
+        }),
+      })
+
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        setMessage(getAuthErrorMessage(data, 'Reset failed'))
+        return
+      }
+
+      setMessage(data?.message || 'Password reset successful')
+      setCode('')
+      setPassword('')
+    } catch (error: unknown) {
+      setMessage(error instanceof Error ? error.message : 'Reset failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -44,33 +62,31 @@ export default function ResetPasswordPage() {
           <h1 className="title" style={{ fontSize: 'clamp(2rem, 5vw, 3.4rem)' }}>
             Reset password
           </h1>
-          <p className="lede">In development, the request endpoint returns a token so you can test the whole flow locally.</p>
+          <p className="lede">Enter the email, 6-digit code, and new password that the backend contract expects.</p>
 
           <div className="grid-2" style={{ marginTop: 24 }}>
             <form className="form" onSubmit={requestReset}>
-              <h2>1. Request token</h2>
+              <h2>Reset password</h2>
               <div className="field">
                 <label htmlFor="reset-email">Email</label>
-                <input id="reset-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="sam@example.com" />
+                <input id="reset-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="sam@example.com" required />
               </div>
-              <button className="button" type="submit">Request reset</button>
-            </form>
-
-            <form className="form" onSubmit={confirmReset}>
-              <h2>2. Confirm token</h2>
               <div className="field">
-                <label htmlFor="reset-token">Token</label>
-                <input id="reset-token" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Paste token here" />
+                <label htmlFor="reset-code">Reset code</label>
+                <input id="reset-code" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(event) => setCode(event.target.value)} placeholder="123456" required />
               </div>
               <div className="field">
                 <label htmlFor="new-password">New password</label>
-                <input id="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="New password" />
+                <input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="New secure password" required />
               </div>
-              <button className="button" type="submit">Set new password</button>
+              <button className="button" type="submit" disabled={loading}>
+                {loading ? 'Updating...' : 'Set new password'}
+              </button>
             </form>
           </div>
 
           <div className="actions" style={{ marginTop: 18 }}>
+            <Link className="button-secondary" href="/forgot-password">Request a code</Link>
             <Link className="button-secondary" href="/login">Back to login</Link>
             <Link className="button-secondary" href="/">Home</Link>
           </div>

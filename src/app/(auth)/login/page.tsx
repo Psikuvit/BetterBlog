@@ -102,6 +102,9 @@ function LoginForm() {
               <Link className="button-secondary" href="/register">
                 Register
               </Link>
+              <Link className="button-secondary" href="/forgot-password">
+                Forgot password
+              </Link>
             </div>
           </form>
 

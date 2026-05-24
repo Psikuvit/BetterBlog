@@ -13,6 +13,9 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   VALIDATION_FAILED: 'Please check the form for missing or invalid fields.',
   ALREADY_EXISTS: 'An account with those details already exists.',
   RATE_LIMIT_EXCEEDED: 'Too many attempts. Please try again later.',
+  PASSWORD_RESET_CODE_MISSING: 'No reset code was found for this email.',
+  PASSWORD_RESET_CODE_INVALID: 'Invalid reset code. Check the code and try again.',
+  PASSWORD_RESET_CODE_EXPIRED: 'Your reset code expired. Request a new code.',
   INTERNAL_SERVER_ERROR: 'The server hit an error. Try again in a moment.',
 }
 
