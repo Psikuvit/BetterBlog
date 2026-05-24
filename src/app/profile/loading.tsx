@@ -1,15 +1,17 @@
+import SkeletonCard from '@/components/skeleton-card'
+
 export default function Loading() {
   return (
     <main className="shell">
       <section className="panel">
-        <div className="panel-inner">
-          <div style={{ display: 'grid', gap: 12 }}>
-            <div style={{ height: 28, width: '30%', background: 'rgba(0,0,0,0.06)', borderRadius: 6 }} />
-            <div style={{ height: 18, width: '50%', background: 'rgba(0,0,0,0.04)', borderRadius: 6 }} />
-            <div style={{ height: 12, width: '100%', background: 'rgba(0,0,0,0.03)', borderRadius: 6 }} />
+        <div className="panel-inner" aria-live="polite" aria-busy="true">
+          <div className="stack-tight">
+            <SkeletonCard lines={2} />
+            <SkeletonCard lines={2} />
           </div>
         </div>
       </section>
     </main>
   )
 }
+

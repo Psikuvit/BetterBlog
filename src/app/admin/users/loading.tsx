@@ -9,10 +9,10 @@ export default function Loading() {
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
+            <SkeletonCard />
           </div>
         </div>
       </section>
     </main>
   )
 }
-

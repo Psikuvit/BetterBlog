@@ -310,3 +310,28 @@ input {
     padding: 20px;
   }
 }
+
+/* Skeleton styles */
+.skeleton {
+  background-image: linear-gradient(90deg,#e9e9ee 0,#f6f6f8 50%,#e9e9ee 100%);
+  background-size: 400px 100%;
+  border-radius: 8px;
+  min-height: 12px;
+  display: inline-block;
+  animation: shimmer 1.1s linear infinite;
+}
+
+.skeleton.line { height: 12px; width: 100%; }
+.skeleton.line.short { width: 60%; }
+.skeleton.avatar { width: 56px; height: 56px; border-radius: 999px; }
+.skeleton.chip { border-radius: 999px; height: 28px; display: inline-block; }
+
+@keyframes shimmer {
+  0% { background-position: -200px 0 }
+  100% { background-position: 200px 0 }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
