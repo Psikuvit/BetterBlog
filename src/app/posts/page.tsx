@@ -25,12 +25,20 @@ type PostItem = {
   authorUsername?: string | null
 }
 
+type PostsResponse = {
+  content?: unknown[]
+  totalElements?: number
+  totalPages?: number
+}
+
 function isPostItem(value: unknown): value is PostItem {
   return typeof value === 'object' && value !== null && 'id' in value
 }
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<PostItem[]>([])
+  const [totalElements, setTotalElements] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [tag, setTag] = useState('')
@@ -48,11 +56,15 @@ export default function PostsPage() {
 
       try {
         const params = new URLSearchParams()
+        params.set('page', '0')
+        params.set('size', '10')
         if (query) params.set('q', query)
         if (tag) params.set('tag', tag)
         const response = await authFetch(apiUrl(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`))
-        const data = await response.json().catch(() => null)
-        setPosts(Array.isArray(data?.posts) ? data.posts.filter(isPostItem) : [])
+        const data = (await response.json().catch(() => null)) as PostsResponse | null
+        setPosts(Array.isArray(data?.content) ? data.content.filter(isPostItem) : [])
+        setTotalElements(typeof data?.totalElements === 'number' ? data.totalElements : 0)
+        setTotalPages(typeof data?.totalPages === 'number' ? data.totalPages : 0)
         setSelectedIds([])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load posts')
@@ -189,7 +201,7 @@ export default function PostsPage() {
               </button>
             </div>
             <p className="muted" style={{ marginTop: 10 }}>
-              {filteredCount} post(s) loaded.
+              {filteredCount} shown of {totalElements} total post(s), {totalPages} page(s) available.
             </p>
           </div>
 
