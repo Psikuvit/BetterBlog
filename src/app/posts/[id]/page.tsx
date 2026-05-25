@@ -29,6 +29,25 @@ type PostDetail = {
   updatedAt: string | null
 }
 
+function getPostDetail(payload: unknown): PostDetail | null {
+  if (!payload || typeof payload !== 'object') {
+    return null
+  }
+
+  const candidate =
+    'post' in payload
+      ? (payload as { post?: unknown }).post
+      : 'data' in payload
+        ? (payload as { data?: unknown }).data
+        : payload
+
+  if (!candidate || typeof candidate !== 'object' || !('id' in candidate)) {
+    return null
+  }
+
+  return candidate as PostDetail
+}
+
 const tagList = (value: string) =>
   value
     .split(',')
@@ -56,6 +75,8 @@ export default function PostDetailPage() {
       setLoading(true)
       const response = await authFetch(apiUrl(`/api/posts/${id}`))
       const data = await response.json().catch(() => null)
+      const nextPost = getPostDetail(data)
+
       if (!response.ok) {
         setPost(null)
         setMessage(getAuthErrorMessage(data, 'Post not found'))
@@ -63,15 +84,22 @@ export default function PostDetailPage() {
         return
       }
 
-      setPost(data.post)
-      setTitle(data.post.title)
-      setSlug(data.post.slug)
-      setExcerpt(data.post.excerpt)
-      setContent(data.post.content)
-      setTags((data.post.tags || []).join(', '))
-      setVisibility(data.post.visibility || 'PUBLIC')
-      setCoverImageUrl(data.post.coverImageUrl || '')
-      setSourceUrl(data.post.sourceUrl || '')
+      if (!nextPost) {
+        setPost(null)
+        setMessage('Post data was incomplete. Please refresh and try again.')
+        setLoading(false)
+        return
+      }
+
+      setPost(nextPost)
+      setTitle(nextPost.title)
+      setSlug(nextPost.slug)
+      setExcerpt(nextPost.excerpt)
+      setContent(nextPost.content)
+      setTags((nextPost.tags || []).join(', '))
+      setVisibility(nextPost.visibility || 'PUBLIC')
+      setCoverImageUrl(nextPost.coverImageUrl || '')
+      setSourceUrl(nextPost.sourceUrl || '')
       setLoading(false)
     }
 
@@ -98,12 +126,18 @@ export default function PostDetailPage() {
     })
 
     const data = await response.json().catch(() => null)
+    const nextPost = getPostDetail(data)
     if (!response.ok) {
       setMessage(getAuthErrorMessage(data, 'Save failed'))
       return
     }
 
-    setPost(data.post)
+    if (!nextPost) {
+      setMessage('Post saved, but the response did not include post details.')
+      return
+    }
+
+    setPost(nextPost)
     setMessage('Post saved')
   }
 
