@@ -91,20 +91,34 @@ export default function PostsPage() {
 
   const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) return
-    const response = await authFetch(apiUrl('/api/posts'), {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: selectedIds }),
-    })
+    try {
+      const results = await Promise.all(
+        selectedIds.map(async (postId) => {
+          const response = await authFetch(apiUrl(`/api/posts/${postId}`), {
+            method: 'DELETE',
+          })
+          const data = await response.json().catch(() => null)
 
-    const data = await response.json().catch(() => null)
-    if (!response.ok) {
-      setMessage(getAuthErrorMessage(data, 'Delete failed'))
-      return
+          return {
+            postId,
+            response,
+            data,
+          }
+        })
+      )
+
+      const failedDelete = results.find(({ response }) => !response.ok)
+
+      if (failedDelete) {
+        setMessage(getAuthErrorMessage(failedDelete.data, `Delete failed for ${failedDelete.postId}`))
+        return
+      }
+
+      setMessage(`Deleted ${results.length} post(s)`)
+      void loadPosts()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Delete failed')
     }
-
-    setMessage(`Deleted ${data?.deletedCount ?? 0} post(s)`)
-    void loadPosts()
   }
 
   const handleExport = async (nextFormat: 'json' | 'csv') => {
