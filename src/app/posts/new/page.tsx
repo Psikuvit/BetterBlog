@@ -14,6 +14,30 @@ type PreviewData = {
   image: string
 }
 
+type CreatedPost = {
+  id: string
+}
+
+function getCreatedPost(payload: unknown): CreatedPost | null {
+  if (!payload || typeof payload !== 'object') {
+    return null
+  }
+
+  const candidate =
+    'post' in payload
+      ? (payload as { post?: unknown }).post
+      : 'data' in payload
+        ? (payload as { data?: unknown }).data
+        : payload
+
+  if (!candidate || typeof candidate !== 'object' || !('id' in candidate)) {
+    return null
+  }
+
+  const id = (candidate as { id?: unknown }).id
+  return typeof id === 'string' && id.length > 0 ? { id } : null
+}
+
 const tagList = (value: string) =>
   value
     .split(',')
@@ -91,8 +115,16 @@ export default function NewPostPage() {
       return
     }
 
+    const createdPost = getCreatedPost(data)
+
+    if (!createdPost) {
+      setMessage('Post created, but the response did not include a post id.')
+      router.push('/posts')
+      return
+    }
+
     setMessage('Post created')
-    router.push(`/posts/${data.post.id}`)
+    router.push(`/posts/${createdPost.id}`)
   }
 
   return (

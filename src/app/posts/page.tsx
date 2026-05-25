@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiUrl } from '@/utils/api'
 import { authFetch, getAuthErrorMessage } from '@/utils/auth'
 
@@ -25,6 +25,10 @@ type PostItem = {
   authorUsername?: string | null
 }
 
+function isPostItem(value: unknown): value is PostItem {
+  return typeof value === 'object' && value !== null && 'id' in value
+}
+
 export default function PostsPage() {
   const [posts, setPosts] = useState<PostItem[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -36,26 +40,36 @@ export default function PostsPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const loadPosts = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (query) params.set('q', query)
-      if (tag) params.set('tag', tag)
-      const response = await authFetch(apiUrl(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`))
-      const data = await response.json().catch(() => null)
-      setPosts(Array.isArray(data?.posts) ? data.posts : [])
-      setSelectedIds([])
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Failed to load posts')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const loadPosts = useCallback(
+    async (showLoading = true) => {
+      if (showLoading) {
+        setLoading(true)
+      }
+
+      try {
+        const params = new URLSearchParams()
+        if (query) params.set('q', query)
+        if (tag) params.set('tag', tag)
+        const response = await authFetch(apiUrl(`/api/posts${params.toString() ? `?${params.toString()}` : ''}`))
+        const data = await response.json().catch(() => null)
+        setPosts(Array.isArray(data?.posts) ? data.posts.filter(isPostItem) : [])
+        setSelectedIds([])
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'Failed to load posts')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [query, tag]
+  )
 
   useEffect(() => {
-    void loadPosts()
-  }, [])
+    const timer = window.setTimeout(() => {
+      void loadPosts(false)
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [loadPosts])
 
   const filteredCount = useMemo(() => posts.length, [posts])
 
