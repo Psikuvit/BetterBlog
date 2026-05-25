@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
+import { authFetch, getAuthErrorMessage } from '@/utils/auth'
 
 type ActivityLog = {
   id: string
@@ -40,8 +41,16 @@ export default function ActivityPage() {
         const params = new URLSearchParams()
         params.set('page', page.toString())
         if (filter !== 'all') params.set('action', filter)
-        const response = await fetch(apiUrl(`/api/activity${params.toString() ? `?${params.toString()}` : ''}`))
-        const data = await response.json()
+        const response = await authFetch(apiUrl(`/api/activity${params.toString() ? `?${params.toString()}` : ''}`))
+        const data = await response.json().catch(() => null)
+
+        if (!response.ok) {
+          console.error('Failed to load activity logs:', getAuthErrorMessage(data, 'Failed to load activity logs'))
+          setLogs([])
+          setTotalPages(1)
+          return
+        }
+
         setLogs(Array.isArray(data?.logs) ? data.logs : [])
         setTotalPages(data?.totalPages || 1)
       } catch (error) {
