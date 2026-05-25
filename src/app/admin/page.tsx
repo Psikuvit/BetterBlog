@@ -15,6 +15,27 @@ type Stats = {
   adminsCount: number
 }
 
+function getPublicPostCount(payload: unknown): number | null {
+  if (typeof payload === 'number' && Number.isFinite(payload)) {
+    return payload
+  }
+
+  if (!payload || typeof payload !== 'object') {
+    return null
+  }
+
+  const count =
+    'count' in payload
+      ? (payload as { count?: unknown }).count
+      : 'total' in payload
+        ? (payload as { total?: unknown }).total
+        : 'publicCount' in payload
+          ? (payload as { publicCount?: unknown }).publicCount
+          : null
+
+  return typeof count === 'number' && Number.isFinite(count) ? count : null
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -30,21 +51,39 @@ export default function AdminDashboard() {
       }
 
       try {
-        const response = await adminFetch(apiUrl('/api/admin/stats'))
-        const data = await response.json().catch(() => null)
+        const [statsResponse, publicCountResponse] = await Promise.all([
+          adminFetch(apiUrl('/api/admin/stats')),
+          fetch(apiUrl('/public/count')),
+        ])
 
-        if (response.status === 401) {
+        const [statsData, publicCountData] = await Promise.all([
+          statsResponse.json().catch(() => null),
+          publicCountResponse.json().catch(() => null),
+        ])
+
+        if (statsResponse.status === 401) {
           router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
           return
         }
 
-        if (!response.ok) {
-          setMessage(getAdminErrorMessage(response, data))
+        if (!statsResponse.ok) {
+          setMessage(getAdminErrorMessage(statsResponse, statsData))
           setStats(null)
           return
         }
 
-        setStats(data?.stats || null)
+        const nextStats = statsData?.stats || null
+
+        if (nextStats) {
+          const publicPostsCount = getPublicPostCount(publicCountData)
+          setStats({
+            ...nextStats,
+            totalPublicPosts: publicPostsCount ?? nextStats.totalPublicPosts,
+          })
+          return
+        }
+
+        setStats(null)
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load stats')
       } finally {
