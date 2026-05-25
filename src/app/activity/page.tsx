@@ -17,6 +17,10 @@ type ActivityLog = {
   createdAt: string
 }
 
+function isActivityLog(value: unknown): value is ActivityLog {
+  return typeof value === 'object' && value !== null && 'id' in value
+}
+
 export default function ActivityPage() {
   const [logs, setLogs] = useState<ActivityLog[]>([])
   const [filter, setFilter] = useState('all')
@@ -51,7 +55,7 @@ export default function ActivityPage() {
           return
         }
 
-        setLogs(Array.isArray(data?.logs) ? data.logs : [])
+        setLogs(Array.isArray(data?.logs) ? data.logs.filter(isActivityLog) : [])
         setTotalPages(data?.totalPages || 1)
       } catch (error) {
         console.error('Failed to load activity logs:', error)

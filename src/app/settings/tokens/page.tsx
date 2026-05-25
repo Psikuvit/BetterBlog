@@ -15,6 +15,10 @@ type APIToken = {
   expiresAt?: string
 }
 
+function isAPIToken(value: unknown): value is APIToken {
+  return typeof value === 'object' && value !== null && 'id' in value
+}
+
 export default function TokensPage() {
   const [tokens, setTokens] = useState<APIToken[]>([])
   const [showNewForm, setShowNewForm] = useState(false)
@@ -49,7 +53,7 @@ export default function TokensPage() {
           setTokens([])
           return
         }
-        setTokens(Array.isArray(data?.tokens) ? data.tokens : [])
+        setTokens(Array.isArray(data?.tokens) ? data.tokens.filter(isAPIToken) : [])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load tokens')
       } finally {
@@ -81,6 +85,11 @@ export default function TokensPage() {
       const data = await response.json().catch(() => null)
       if (!response.ok) {
         setMessage(getAuthErrorMessage(data, 'Failed to create token'))
+        return
+      }
+
+      if (!data?.token || typeof data.token !== 'object' || !('id' in data.token)) {
+        setMessage('Token created, but the response was missing token details.')
         return
       }
 

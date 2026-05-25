@@ -21,6 +21,14 @@ type Post = {
   visibility: string
 }
 
+function isTemporaryLink(value: unknown): value is TemporaryLink {
+  return typeof value === 'object' && value !== null && 'id' in value
+}
+
+function isPost(value: unknown): value is Post {
+  return typeof value === 'object' && value !== null && 'id' in value
+}
+
 export default function SharingPage() {
   const [links, setLinks] = useState<TemporaryLink[]>([])
   const [posts, setPosts] = useState<Post[]>([])
@@ -47,8 +55,8 @@ export default function SharingPage() {
           return
         }
 
-        setLinks(Array.isArray(linksData?.links) ? linksData.links : [])
-        setPosts(Array.isArray(postsData?.posts) ? postsData.posts : [])
+        setLinks(Array.isArray(linksData?.links) ? linksData.links.filter(isTemporaryLink) : [])
+        setPosts(Array.isArray(postsData?.posts) ? postsData.posts.filter(isPost) : [])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load data')
       } finally {
@@ -80,6 +88,11 @@ export default function SharingPage() {
       const data = await response.json().catch(() => null)
       if (!response.ok) {
         setMessage(getAuthErrorMessage(data, 'Failed to create link'))
+        return
+      }
+
+      if (!data?.link || typeof data.link !== 'object' || !('id' in data.link)) {
+        setMessage('Link created, but the response was missing link details.')
         return
       }
 
