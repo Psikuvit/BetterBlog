@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
-import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '../../../utils/admin-auth'
+import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
 
 type AdminPost = {
   id: string

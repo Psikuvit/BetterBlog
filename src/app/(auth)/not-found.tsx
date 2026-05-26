@@ -6,7 +6,7 @@ export default function NotFound() {
       <section className="panel">
         <div className="panel-inner">
           <h1>Not found</h1>
-          <p className="muted">The page you are looking for isn't here.</p>
+          <p className="muted">The page you are looking for isn&apos;t here.</p>
           <div className="actions">
             <Link className="button" href="/">Home</Link>
           </div>
