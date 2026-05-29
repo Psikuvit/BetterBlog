@@ -5,15 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
-
-type Moderator = {
-  id: string
-  username: string
-  email: string
-  permissions: string[]
-  assignedAt: string
-  assignedBy: string
-}
+import type { Moderator } from '@/types'
 
 export default function AdminModeratorsPage() {
   const [moderators, setModerators] = useState<Moderator[]>([])

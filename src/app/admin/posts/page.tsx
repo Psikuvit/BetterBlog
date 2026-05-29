@@ -5,17 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
-
-type AdminPost = {
-  id: string
-  title: string
-  excerpt: string
-  visibility: string
-  authorUsername: string
-  createdAt: string
-  madePrivateBy?: string
-  madePrivateAt?: string
-}
+import type { AdminPost } from '@/types'
 
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<AdminPost[]>([])

@@ -4,28 +4,13 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
 import { authFetch, getAuthErrorMessage } from '@/utils/auth'
-
-type TemporaryLink = {
-  id: string
-  postId: string
-  token: string
-  expiresAt: string
-  createdAt: string
-  accessCount: number
-  maxAccess?: number
-}
-
-type Post = {
-  id: string
-  title: string
-  visibility: string
-}
+import type { SharedPost, TemporaryLink } from '@/types'
 
 function isTemporaryLink(value: unknown): value is TemporaryLink {
   return typeof value === 'object' && value !== null && 'id' in value
 }
 
-function isPost(value: unknown): value is Post {
+function isPost(value: unknown): value is SharedPost {
   return typeof value === 'object' && value !== null && 'id' in value
 }
 

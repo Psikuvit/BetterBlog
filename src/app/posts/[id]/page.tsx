@@ -6,28 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
 import { authFetch, getAuthErrorMessage } from '@/utils/auth'
-
-type PostDetail = {
-  id: string
-  title: string
-  slug: string
-  excerpt: string
-  content: string
-  tags: string[]
-  visibility: string
-  coverImageUrl: string
-  isPublic: boolean
-  publishedAt: string | null
-  sourceUrl: string | null
-  sourcePreviewTitle: string | null
-  sourcePreviewDescription: string | null
-  sourcePreviewImage: string | null
-  originalAuthor: string | null
-  legacyId: string | null
-  importedAt: string | null
-  createdAt: string | null
-  updatedAt: string | null
-}
+import type { PostDetail } from '@/types'
 
 function getPostDetail(payload: unknown): PostDetail | null {
   if (!payload || typeof payload !== 'object') {

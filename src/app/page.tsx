@@ -4,47 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { apiUrl } from "@/utils/api";
+import type { FeedSummary, PostItem } from "@/types";
 import {
-  authFetch,
   getAuthErrorMessage,
   getSessionPreview,
+  authFetch,
 } from "@/utils/auth";
-
-type PostItem = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  tags: string[];
-  visibility: string;
-  coverImageUrl: string;
-  isPublic: boolean;
-  publishedAt: string | null;
-  sourcePreviewTitle: string | null;
-  sourcePreviewDescription: string | null;
-  sourcePreviewImage: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-  authorUsername?: string | null;
-};
-
-const visibilityOptions = [
-  { value: "all", label: "All posts" },
-  { value: "public", label: "Public" },
-  { value: "private", label: "Private" },
-  { value: "admin-private", label: "Admin private" },
-];
-
-const sortOptions = [
-  { value: "recent", label: "Most recent" },
-  { value: "oldest", label: "Oldest first" },
-  { value: "title", label: "Title" },
-];
-
-function isPostItem(value: unknown): value is PostItem {
-  return typeof value === "object" && value !== null && "id" in value;
-}
+import {
+  getFeedLabel,
+  isPostItem,
+  sortOptions,
+  visibilityOptions,
+} from "@/utils/posts";
 
 export default function HomePage() {
   const sessionPreview = getSessionPreview();
@@ -57,7 +28,10 @@ export default function HomePage() {
   const [sortOpen, setSortOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState({ totalElements: 0, totalPages: 0 });
+  const [summary, setSummary] = useState<FeedSummary>({
+    totalElements: 0,
+    totalPages: 0,
+  });
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -207,8 +181,7 @@ export default function HomePage() {
                   aria-expanded={visibilityOpen}
                 >
                   <span>
-                    {visibilityOptions.find((item) => item.value === visibility)
-                      ?.label || "All posts"}
+                    {getFeedLabel(visibilityOptions, visibility, "All posts")}
                   </span>
                   <span className="dropdown-caret" aria-hidden="true">
                     ⌄
@@ -252,10 +225,7 @@ export default function HomePage() {
                   aria-haspopup="listbox"
                   aria-expanded={sortOpen}
                 >
-                  <span>
-                    {sortOptions.find((item) => item.value === sort)?.label ||
-                      "Most recent"}
-                  </span>
+                  <span>{getFeedLabel(sortOptions, sort, "Most recent")}</span>
                   <span className="dropdown-caret" aria-hidden="true">
                     ⌄
                   </span>

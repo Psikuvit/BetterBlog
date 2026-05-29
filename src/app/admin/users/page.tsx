@@ -5,16 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
-
-type AdminUser = {
-  id: string
-  username: string
-  email: string
-  role: 'USER' | 'MODERATOR' | 'ADMIN'
-  createdAt: string
-  postsCount: number
-  lastLoginAt?: string
-}
+import type { AdminUser } from '@/types'
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])

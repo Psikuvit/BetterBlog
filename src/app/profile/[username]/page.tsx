@@ -1,8 +1,5 @@
 import Link from 'next/link'
-
-type ProfilePageProps = {
-  params: Promise<{ username: string }>
-}
+import type { ProfilePageProps } from '@/types'
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { username } = await params

@@ -4,16 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
 import { authFetch, getAuthErrorMessage } from '@/utils/auth'
-
-type APIToken = {
-  id: string
-  name: string
-  token: string
-  scopes: string[]
-  createdAt: string
-  lastUsedAt?: string
-  expiresAt?: string
-}
+import type { APIToken } from '@/types'
 
 function isAPIToken(value: unknown): value is APIToken {
   return typeof value === 'object' && value !== null && 'id' in value

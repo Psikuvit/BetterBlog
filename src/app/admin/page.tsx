@@ -5,15 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
-
-type Stats = {
-  totalUsers: number
-  totalPosts: number
-  totalPublicPosts: number
-  totalPrivatePosts: number
-  moderatorsCount: number
-  adminsCount: number
-}
+import type { Stats } from '@/types'
 
 function getPublicPostCount(payload: unknown): number | null {
   if (typeof payload === 'number' && Number.isFinite(payload)) {

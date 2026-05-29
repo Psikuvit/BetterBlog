@@ -5,14 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
-
-type Config = {
-  maxPostsPerUser: number
-  allowUserRegistration: boolean
-  requireEmailVerification: boolean
-  maxSharingLinkExpiryDays: number
-  defaultTokenExpiryDays: number
-}
+import type { Config } from '@/types'
 
 export default function AdminConfigPage() {
   const [config, setConfig] = useState<Config | null>(null)

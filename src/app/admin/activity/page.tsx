@@ -5,18 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
-
-type AdminActivityLog = {
-  id: string
-  action: string
-  resourceType: string
-  resourceId?: string
-  resourceName?: string
-  username: string
-  severity: 'info' | 'warning' | 'critical'
-  details?: Record<string, unknown>
-  createdAt: string
-}
+import type { AdminActivityLog } from '@/types'
 
 export default function AdminActivityPage() {
   const [logs, setLogs] = useState<AdminActivityLog[]>([])

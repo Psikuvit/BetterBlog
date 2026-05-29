@@ -4,18 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
 import { authFetch, getAuthErrorMessage } from '@/utils/auth'
-
-type ActivityLog = {
-  id: string
-  action: string
-  resourceType: string
-  resourceId?: string
-  resourceName?: string
-  details?: Record<string, unknown>
-  ipAddress?: string
-  userAgent?: string
-  createdAt: string
-}
+import type { ActivityLog } from '@/types'
 
 function isActivityLog(value: unknown): value is ActivityLog {
   return typeof value === 'object' && value !== null && 'id' in value
