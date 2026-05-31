@@ -1,15 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/utils/api";
-import {
-  authFetch,
-  clearAuthSession,
-  clearSessionUserCache,
-  getAuthErrorMessage,
-} from "@/utils/auth";
+import { authFetch, getAuthErrorMessage } from "@/utils/auth";
 import type { SharedPost, TemporaryLink } from "@/types";
 
 function isTemporaryLink(value: unknown): value is TemporaryLink {
@@ -21,7 +15,6 @@ function isPost(value: unknown): value is SharedPost {
 }
 
 export default function SharingPage() {
-  const router = useRouter();
   const [links, setLinks] = useState<TemporaryLink[]>([]);
   const [posts, setPosts] = useState<SharedPost[]>([]);
   const [selectedPostId, setSelectedPostId] = useState("");
@@ -30,7 +23,6 @@ export default function SharingPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -140,25 +132,6 @@ export default function SharingPage() {
     }
   };
 
-  const handleLogout = async () => {
-    if (loggingOut) {
-      return;
-    }
-
-    setLoggingOut(true);
-
-    try {
-      await authFetch(apiUrl("/api/auth/logout"), {
-        method: "POST",
-      });
-    } catch {
-    } finally {
-      clearAuthSession();
-      clearSessionUserCache();
-      router.replace("/login");
-    }
-  };
-
   return (
     <main className="shell">
       <section className="panel" style={{ width: "min(100%, 960px)" }}>
@@ -176,14 +149,6 @@ export default function SharingPage() {
               </p>
             </div>
             <div className="actions">
-              <button
-                className="button-secondary"
-                type="button"
-                onClick={handleLogout}
-                disabled={loggingOut}
-              >
-                {loggingOut ? "Logging out..." : "Log out"}
-              </button>
               <Link className="button-secondary" href="/settings">
                 Back to settings
               </Link>
