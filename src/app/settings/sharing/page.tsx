@@ -16,7 +16,7 @@ function isPost(value: unknown): value is SharedPost {
 
 export default function SharingPage() {
   const [links, setLinks] = useState<TemporaryLink[]>([])
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = useState<SharedPost[]>([])
   const [selectedPostId, setSelectedPostId] = useState('')
   const [expiresIn, setExpiresIn] = useState('7d')
   const [maxAccess, setMaxAccess] = useState('')
