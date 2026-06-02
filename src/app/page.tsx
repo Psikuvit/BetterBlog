@@ -8,6 +8,7 @@ import type { FeedSummary, PostItem } from "@/types";
 import {
   getAuthErrorMessage,
   getSessionPreview,
+  getSessionUser,
   authFetch,
 } from "@/utils/auth";
 import {
@@ -19,11 +20,6 @@ import {
 
 export default function HomePage() {
   const sessionPreview = getSessionPreview();
-  const sessionIdentity = (
-    sessionPreview?.username ||
-    sessionPreview?.subject ||
-    ""
-  ).toLowerCase();
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("");
@@ -46,6 +42,9 @@ export default function HomePage() {
         setMessage("");
 
         try {
+          const currentUser = await getSessionUser();
+          const currentUserId = currentUser?.id || "";
+
           const params = new URLSearchParams();
           params.set("page", "0");
           params.set("size", "100");
@@ -69,12 +68,12 @@ export default function HomePage() {
           const nextPosts = Array.isArray(data?.content)
             ? data.content.filter(isPostItem)
             : [];
-          const ownedPosts = sessionIdentity
+          const ownedPosts = currentUserId
             ? nextPosts.filter(
                 (post: PostItem) =>
-                  (post.authorUsername || "").toLowerCase() === sessionIdentity,
+                  (post.authorId || "").toLowerCase() === currentUserId,
               )
-            : nextPosts;
+            : [];
           setPosts(ownedPosts);
           setSummary({
             totalElements: ownedPosts.length,
@@ -95,17 +94,10 @@ export default function HomePage() {
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [query, refreshKey, sessionIdentity, tag]);
+  }, [query, refreshKey, tag]);
 
   const visiblePosts = useMemo(() => {
-    const personalPosts = sessionIdentity
-      ? posts.filter(
-          (post) =>
-            (post.authorUsername || "").toLowerCase() === sessionIdentity,
-        )
-      : posts;
-
-    const filtered = personalPosts.filter(
+    const filtered = posts.filter(
       (post) =>
         visibility === "all" || post.visibility.toLowerCase() === visibility,
     );
@@ -127,7 +119,7 @@ export default function HomePage() {
     });
 
     return sorted;
-  }, [posts, sessionIdentity, sort, visibility]);
+  }, [posts, sort, visibility]);
 
   return (
     <main className="shell home-shell">

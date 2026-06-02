@@ -222,7 +222,9 @@ export default function AdminPostsPage() {
                             {post.excerpt}
                           </p>
                         </td>
-                        <td style={{ padding: 12 }}>@{post.authorUsername}</td>
+                        <td style={{ padding: 12 }}>
+                          @{post.authorUsername}
+                        </td>
                         <td style={{ padding: 12 }}>
                           <span className='chip'>{post.visibility}</span>
                           {post.madePrivateBy ? (

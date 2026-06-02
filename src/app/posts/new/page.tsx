@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { apiUrl } from '@/utils/api'
-import { authFetch } from '@/utils/auth'
+import { authFetch, getSessionUser } from '@/utils/auth'
 import type { CreatedPost, PreviewData } from '@/types'
 
 function getCreatedPost(payload: unknown): CreatedPost | null {
@@ -57,7 +57,9 @@ export default function NewPostPage() {
     }
 
     try {
-      const response = await fetch(apiUrl(`/api/posts/preview?url=${encodeURIComponent(urlValue)}`))
+      const response = await fetch(
+        apiUrl(`/api/posts/preview?url=${encodeURIComponent(urlValue)}`),
+      )
       const data = await response.json().catch(() => null)
       setPreview(response.ok ? data.preview : null)
     } catch {
@@ -78,10 +80,19 @@ export default function NewPostPage() {
     setLoading(true)
     setMessage('')
 
+    const currentUser = await getSessionUser()
+
+    if (!currentUser?.id) {
+      setLoading(false)
+      setMessage('Unable to determine your account. Please sign in again.')
+      return
+    }
+
     const buildPostBody = () => ({
       title,
       slug,
       content,
+      authorId: currentUser.id,
       visibility: visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC',
       ...(excerpt ? { excerpt } : {}),
       tags: tagList(tags),
@@ -130,105 +141,184 @@ export default function NewPostPage() {
               <h1 className="page-title">New post</h1>
               <p className="lede">Create a post, attach a cover image, and preview an external URL before saving.</p>
             </div>
-            <div className="actions">
-              <Link className="button-secondary" href="/posts">
+            <div className='actions'>
+              <Link className='button-secondary' href='/posts'>
                 Back to posts
               </Link>
             </div>
           </div>
 
-          <form className="split" onSubmit={handleSubmit} style={{ marginTop: 18 }}>
-            <div className="stack-tight">
-              <div className="card">
-                <div className="form">
-                  <div className="field">
-                    <label htmlFor="title">Title</label>
-                    <input id="title" required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="My first post" />
+          <form
+            className='split'
+            onSubmit={handleSubmit}
+            style={{ marginTop: 18 }}
+          >
+            <div className='stack-tight'>
+              <div className='card'>
+                <div className='form'>
+                  <div className='field'>
+                    <label htmlFor='title'>Title</label>
+                    <input
+                      id='title'
+                      required
+                      value={title}
+                      onChange={(event) => setTitle(event.target.value)}
+                      placeholder='My first post'
+                    />
                   </div>
-                  <div className="grid-2">
-                    <div className="field">
-                      <label htmlFor="slug">Slug</label>
-                      <input id="slug" required value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="my-first-post" />
+                  <div className='grid-2'>
+                    <div className='field'>
+                      <label htmlFor='slug'>Slug</label>
+                      <input
+                        id='slug'
+                        required
+                        value={slug}
+                        onChange={(event) => setSlug(event.target.value)}
+                        placeholder='my-first-post'
+                      />
                     </div>
-                    <div className="field">
-                      <label htmlFor="visibility">Visibility</label>
-                      <select id="visibility" value={visibility} onChange={(event) => setVisibility(event.target.value)}>
-                        <option value="PUBLIC">Public</option>
-                        <option value="PRIVATE">Private</option>
+                    <div className='field'>
+                      <label htmlFor='visibility'>Visibility</label>
+                      <select
+                        id='visibility'
+                        value={visibility}
+                        onChange={(event) => setVisibility(event.target.value)}
+                      >
+                        <option value='PUBLIC'>Public</option>
+                        <option value='PRIVATE'>Private</option>
                       </select>
                     </div>
                   </div>
-                  <div className="field">
-                    <label htmlFor="excerpt">Excerpt</label>
-                    <textarea id="excerpt" value={excerpt} onChange={(event) => setExcerpt(event.target.value)} placeholder="A short summary." />
+                  <div className='field'>
+                    <label htmlFor='excerpt'>Excerpt</label>
+                    <textarea
+                      id='excerpt'
+                      value={excerpt}
+                      onChange={(event) => setExcerpt(event.target.value)}
+                      placeholder='A short summary.'
+                    />
                   </div>
-                  <div className="field">
-                    <label htmlFor="content">HTML content</label>
-                    <textarea id="content" required value={content} onChange={(event) => setContent(event.target.value)} />
+                  <div className='field'>
+                    <label htmlFor='content'>HTML content</label>
+                    <textarea
+                      id='content'
+                      required
+                      value={content}
+                      onChange={(event) => setContent(event.target.value)}
+                    />
                   </div>
-                  <div className="field">
-                    <label htmlFor="tags">Tags</label>
-                    <input id="tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder="nextjs, mongodb, ui" />
+                  <div className='field'>
+                    <label htmlFor='tags'>Tags</label>
+                    <input
+                      id='tags'
+                      value={tags}
+                      onChange={(event) => setTags(event.target.value)}
+                      placeholder='nextjs, mongodb, ui'
+                    />
                   </div>
                 </div>
               </div>
 
-              <div className="card">
+              <div className='card'>
                 <h2 style={{ marginTop: 0 }}>Source details</h2>
-                <div className="field">
-                  <label htmlFor="sourceUrl">External URL</label>
-                  <input id="sourceUrl" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://example.com/article" />
+                <div className='field'>
+                  <label htmlFor='sourceUrl'>External URL</label>
+                  <input
+                    id='sourceUrl'
+                    value={sourceUrl}
+                    onChange={(event) => setSourceUrl(event.target.value)}
+                    placeholder='https://example.com/article'
+                  />
                 </div>
-                <div className="grid-2">
-                  <div className="field">
-                    <label htmlFor="coverImageUrl">Cover image URL</label>
-                    <input id="coverImageUrl" value={coverImageUrl} onChange={(event) => setCoverImageUrl(event.target.value)} placeholder="https://.../cover.jpg" />
+                <div className='grid-2'>
+                  <div className='field'>
+                    <label htmlFor='coverImageUrl'>Cover image URL</label>
+                    <input
+                      id='coverImageUrl'
+                      value={coverImageUrl}
+                      onChange={(event) => setCoverImageUrl(event.target.value)}
+                      placeholder='https://.../cover.jpg'
+                    />
                   </div>
-                  <div className="field">
-                    <label htmlFor="originalAuthor">Original author</label>
-                    <input id="originalAuthor" value={originalAuthor} onChange={(event) => setOriginalAuthor(event.target.value)} placeholder="Jane Doe" />
+                  <div className='field'>
+                    <label htmlFor='originalAuthor'>Original author</label>
+                    <input
+                      id='originalAuthor'
+                      value={originalAuthor}
+                      onChange={(event) =>
+                        setOriginalAuthor(event.target.value)
+                      }
+                      placeholder='Jane Doe'
+                    />
                   </div>
                 </div>
-                <div className="field">
-                  <label htmlFor="legacyId">Legacy ID</label>
-                  <input id="legacyId" value={legacyId} onChange={(event) => setLegacyId(event.target.value)} placeholder="old-platform-123" />
+                <div className='field'>
+                  <label htmlFor='legacyId'>Legacy ID</label>
+                  <input
+                    id='legacyId'
+                    value={legacyId}
+                    onChange={(event) => setLegacyId(event.target.value)}
+                    placeholder='old-platform-123'
+                  />
                 </div>
-                <div className="actions">
-                  <button className="button-secondary" type="button" onClick={() => void loadPreview(sourceUrl)}>
+                <div className='actions'>
+                  <button
+                    className='button-secondary'
+                    type='button'
+                    onClick={() => void loadPreview(sourceUrl)}
+                  >
                     Refresh preview
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="stack-tight">
-              <div className="card">
+            <div className='stack-tight'>
+              <div className='card'>
                 <h2 style={{ marginTop: 0 }}>Preview</h2>
                 {preview ? (
-                  <div className="stack-tight">
+                  <div className='stack-tight'>
                     <strong>{preview.title}</strong>
-                    <p className="muted" style={{ margin: 0 }}>
+                    <p className='muted' style={{ margin: 0 }}>
                       {preview.description || 'No description found.'}
                     </p>
                     {preview.image ? (
-                      <Image src={preview.image} alt={preview.title} width={500} height={300} style={{ width: '100%', height: 'auto', borderRadius: 18, border: '1px solid rgba(30, 27, 24, 0.12)' }} />
+                      <Image
+                        src={preview.image}
+                        alt={preview.title}
+                        width={500}
+                        height={300}
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          borderRadius: 18,
+                          border: '1px solid rgba(30, 27, 24, 0.12)',
+                        }}
+                      />
                     ) : null}
-                    <a className="button-secondary" href={preview.url} target="_blank" rel="noreferrer">
+                    <a
+                      className='button-secondary'
+                      href={preview.url}
+                      target='_blank'
+                      rel='noreferrer'
+                    >
                       Open source URL
                     </a>
                   </div>
                 ) : (
-                  <p className="muted">Add an external URL to generate a preview.</p>
+                  <p className='muted'>
+                    Add an external URL to generate a preview.
+                  </p>
                 )}
               </div>
 
-              {message ? <div className="notice">{message}</div> : null}
+              {message ? <div className='notice'>{message}</div> : null}
 
-              <div className="actions">
-                <button className="button" type="submit" disabled={loading}>
+              <div className='actions'>
+                <button className='button' type='submit' disabled={loading}>
                   {loading ? 'Saving...' : 'Create post'}
                 </button>
-                <Link className="button-secondary" href="/posts">
+                <Link className='button-secondary' href='/posts'>
                   Cancel
                 </Link>
               </div>

@@ -14,6 +14,7 @@ export type PostItem = {
   sourcePreviewImage: string | null
   createdAt: string | null
   updatedAt: string | null
+  authorId?: string | null
   authorUsername?: string | null
 }
 
@@ -97,6 +98,7 @@ export type AdminPost = {
   excerpt: string
   visibility: string
   authorUsername: string
+  authorName?: string
   createdAt: string
   madePrivateBy?: string
   madePrivateAt?: string
@@ -148,6 +150,8 @@ export type PostDetail = {
   importedAt: string | null
   createdAt: string | null
   updatedAt: string | null
+  authorId?: string | null
+  authorName?: string | null
 }
 
 export type PreviewData = {

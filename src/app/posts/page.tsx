@@ -104,9 +104,6 @@ export default function PostsPage() {
           <p className="muted" style={{ margin: 0 }}>
             Public feed
           </p>
-          <Link className="home-settings-link" href="/login" aria-label="Login">
-            Sign in
-          </Link>
         </div>
         <div className="panel-inner home-inner">
           <header className="home-header">
