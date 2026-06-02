@@ -406,7 +406,8 @@ input {
 
 .feed-visual {
   position: relative;
-  min-height: 140px;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
   overflow: hidden;
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(202, 90, 63, 0.18), rgba(87, 124, 176, 0.18));
@@ -543,6 +544,11 @@ input {
 
   .feed-actions .muted {
     text-align: left;
+  }
+
+  .feed-visual {
+    width: min(100%, 280px);
+    justify-self: center;
   }
 }
 
