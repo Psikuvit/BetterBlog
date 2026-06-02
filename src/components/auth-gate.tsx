@@ -1,50 +1,56 @@
-'use client'
+"use client";
 
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { clearAuthSession, getClientAuthToken, resolveAuthToken } from '@/utils/auth'
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  clearAuthSession,
+  getClientAuthToken,
+  resolveAuthToken,
+} from "@/utils/auth";
 
-const PUBLIC_PATHS = ['/login', '/register', '/reset-password']
+const PUBLIC_PATHS = ["/login", "/register", "/reset-password", "/posts"];
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.includes(pathname)
+  return PUBLIC_PATHS.includes(pathname);
 }
 
-export function AuthGate({ children }: Readonly<{ children: React.ReactNode }>) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [validatedPath, setValidatedPath] = useState('')
+export function AuthGate({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [validatedPath, setValidatedPath] = useState("");
 
   useEffect(() => {
-    let active = true
+    let active = true;
 
     const validate = async () => {
       if (isPublicPath(pathname)) {
         if (active) {
-          setValidatedPath(pathname)
+          setValidatedPath(pathname);
         }
-        return
+        return;
       }
 
-      const token = getClientAuthToken() || (await resolveAuthToken())
+      const token = getClientAuthToken() || (await resolveAuthToken());
 
       if (!token) {
-        clearAuthSession()
-        router.replace('/login?redirect=' + encodeURIComponent(pathname))
-        return
+        clearAuthSession();
+        router.replace("/login?redirect=" + encodeURIComponent(pathname));
+        return;
       }
 
       if (active) {
-        setValidatedPath(pathname)
+        setValidatedPath(pathname);
       }
-    }
+    };
 
-    void validate()
+    void validate();
 
     return () => {
-      active = false
-    }
-  }, [pathname, router])
+      active = false;
+    };
+  }, [pathname, router]);
 
   if (!isPublicPath(pathname) && validatedPath !== pathname) {
     return (
@@ -55,8 +61,8 @@ export function AuthGate({ children }: Readonly<{ children: React.ReactNode }>) 
           </div>
         </section>
       </main>
-    )
+    );
   }
 
-  return children
+  return children;
 }

@@ -19,6 +19,11 @@ import {
 
 export default function HomePage() {
   const sessionPreview = getSessionPreview();
+  const sessionIdentity = (
+    sessionPreview?.username ||
+    sessionPreview?.subject ||
+    ""
+  ).toLowerCase();
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("");
@@ -43,7 +48,7 @@ export default function HomePage() {
         try {
           const params = new URLSearchParams();
           params.set("page", "0");
-          params.set("size", "20");
+          params.set("size", "100");
           if (query.trim()) params.set("q", query.trim());
           if (tag.trim()) params.set("tag", tag.trim());
 
@@ -64,14 +69,16 @@ export default function HomePage() {
           const nextPosts = Array.isArray(data?.content)
             ? data.content.filter(isPostItem)
             : [];
-          setPosts(nextPosts);
+          const ownedPosts = sessionIdentity
+            ? nextPosts.filter(
+                (post: PostItem) =>
+                  (post.authorUsername || "").toLowerCase() === sessionIdentity,
+              )
+            : nextPosts;
+          setPosts(ownedPosts);
           setSummary({
-            totalElements:
-              typeof data?.totalElements === "number"
-                ? data.totalElements
-                : nextPosts.length,
-            totalPages:
-              typeof data?.totalPages === "number" ? data.totalPages : 1,
+            totalElements: ownedPosts.length,
+            totalPages: ownedPosts.length > 0 ? 1 : 0,
           });
         } catch (error) {
           setPosts([]);
@@ -88,10 +95,17 @@ export default function HomePage() {
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [query, refreshKey, tag]);
+  }, [query, refreshKey, sessionIdentity, tag]);
 
   const visiblePosts = useMemo(() => {
-    const filtered = posts.filter(
+    const personalPosts = sessionIdentity
+      ? posts.filter(
+          (post) =>
+            (post.authorUsername || "").toLowerCase() === sessionIdentity,
+        )
+      : posts;
+
+    const filtered = personalPosts.filter(
       (post) =>
         visibility === "all" || post.visibility.toLowerCase() === visibility,
     );
@@ -113,7 +127,7 @@ export default function HomePage() {
     });
 
     return sorted;
-  }, [posts, sort, visibility]);
+  }, [posts, sessionIdentity, sort, visibility]);
 
   return (
     <main className="shell home-shell">
@@ -138,10 +152,10 @@ export default function HomePage() {
                 <span className="brand-mark" />
                 BetterBlog
               </span>
-              <h1 className="page-title">Posts</h1>
+              <h1 className="page-title">My posts</h1>
               <p className="lede">
-                Browse posts directly from the homepage, search by title or tag,
-                and keep the layout evenly spaced.
+                Browse your own posts here, including private ones, and use the
+                filters to narrow the list.
               </p>
             </div>
           </header>
