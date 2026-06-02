@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
-import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
+import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { AdminPost } from '@/types'
 
 export default function AdminPostsPage() {
@@ -22,16 +22,15 @@ export default function AdminPostsPage() {
     const loadPosts = async () => {
       setLoading(true)
 
-      if (!getAdminAccessToken()) {
-        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
-        return
-      }
-
       try {
         const params = new URLSearchParams()
         params.set('page', page.toString())
         if (filter !== 'all') params.set('visibility', filter)
-        const response = await adminFetch(apiUrl(`/api/admin/posts${params.toString() ? `?${params.toString()}` : ''}`))
+        const response = await adminFetch(
+          apiUrl(
+            `/api/admin/posts${params.toString() ? `?${params.toString()}` : ''}`,
+          ),
+        )
         const data = await response.json().catch(() => null)
 
         if (response.status === 401) {
@@ -49,7 +48,9 @@ export default function AdminPostsPage() {
         setPosts(Array.isArray(data?.posts) ? data.posts : [])
         setTotalPages(data?.totalPages || 1)
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Failed to load posts')
+        setMessage(
+          error instanceof Error ? error.message : 'Failed to load posts',
+        )
       } finally {
         setLoading(false)
       }
@@ -57,7 +58,10 @@ export default function AdminPostsPage() {
     loadPosts()
   }, [filter, page, pathname, router])
 
-  const handleChangeVisibility = async (postId: string, newVisibility: string) => {
+  const handleChangeVisibility = async (
+    postId: string,
+    newVisibility: string,
+  ) => {
     setActionLoading(postId)
     try {
       const response = await adminFetch(apiUrl(`/api/admin/posts/${postId}`), {
@@ -80,12 +84,14 @@ export default function AdminPostsPage() {
 
       setPosts(
         posts.map((post) =>
-          post.id === postId ? { ...post, visibility: newVisibility } : post
-        )
+          post.id === postId ? { ...post, visibility: newVisibility } : post,
+        ),
       )
       setMessage('Post visibility updated')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Error updating post')
+      setMessage(
+        error instanceof Error ? error.message : 'Error updating post',
+      )
     } finally {
       setActionLoading(null)
     }
@@ -115,35 +121,44 @@ export default function AdminPostsPage() {
       setPosts(posts.filter((p) => p.id !== postId))
       setMessage('Post deleted')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Error deleting post')
+      setMessage(
+        error instanceof Error ? error.message : 'Error deleting post',
+      )
     } finally {
       setActionLoading(null)
     }
   }
 
   return (
-    <main className="shell">
-      <section className="panel" style={{ width: 'min(100%, 1000px)' }}>
-        <div className="panel-inner">
-          <div className="page-head">
+    <main className='shell'>
+      <section className='panel' style={{ width: 'min(100%, 1000px)' }}>
+        <div className='panel-inner'>
+          <div className='page-head'>
             <div>
-              <span className="brand">
-                <span className="brand-mark" />
+              <span className='brand'>
+                <span className='brand-mark' />
                 BetterBlog
               </span>
-              <h1 className="page-title">Post Management</h1>
-              <p className="lede">Review and moderate posts. Admins can make posts private or public.</p>
+              <h1 className='page-title'>Post Management</h1>
+              <p className='lede'>
+                Review and moderate posts. Admins can make posts private or
+                public.
+              </p>
             </div>
-            <div className="actions">
-              <Link className="button-secondary" href="/admin">
+            <div className='actions'>
+              <Link className='button-secondary' href='/admin'>
                 Back to admin
               </Link>
             </div>
           </div>
 
-          {message ? <div className="notice" style={{ marginTop: 16 }}>{message}</div> : null}
+          {message ? (
+            <div className='notice' style={{ marginTop: 16 }}>
+              {message}
+            </div>
+          ) : null}
 
-          <div className="card" style={{ marginTop: 18 }}>
+          <div className='card' style={{ marginTop: 18 }}>
             <div style={{ marginBottom: 16 }}>
               <select
                 value={filter}
@@ -151,59 +166,92 @@ export default function AdminPostsPage() {
                   setFilter(e.target.value)
                   setPage(1)
                 }}
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(30, 27, 24, 0.12)' }}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  border: '1px solid rgba(30, 27, 24, 0.12)',
+                }}
               >
-                <option value="all">All posts</option>
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-                <option value="admin-private">Admin private</option>
+                <option value='all'>All posts</option>
+                <option value='public'>Public</option>
+                <option value='private'>Private</option>
+                <option value='admin-private'>Admin private</option>
               </select>
             </div>
 
             {loading ? (
-              <p className="muted">Loading posts...</p>
+              <p className='muted'>Loading posts...</p>
             ) : posts.length === 0 ? (
-              <p className="muted">No posts to display.</p>
+              <p className='muted'>No posts to display.</p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(30, 27, 24, 0.12)' }}>
+                    <tr
+                      style={{
+                        borderBottom: '1px solid rgba(30, 27, 24, 0.12)',
+                      }}
+                    >
                       <th style={{ textAlign: 'left', padding: 12 }}>Title</th>
                       <th style={{ textAlign: 'left', padding: 12 }}>Author</th>
-                      <th style={{ textAlign: 'left', padding: 12 }}>Visibility</th>
-                      <th style={{ textAlign: 'left', padding: 12 }}>Created</th>
-                      <th style={{ textAlign: 'left', padding: 12 }}>Actions</th>
+                      <th style={{ textAlign: 'left', padding: 12 }}>
+                        Visibility
+                      </th>
+                      <th style={{ textAlign: 'left', padding: 12 }}>
+                        Created
+                      </th>
+                      <th style={{ textAlign: 'left', padding: 12 }}>
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {posts.map((post) => (
-                      <tr key={post.id} style={{ borderBottom: '1px solid rgba(30, 27, 24, 0.12)' }}>
+                      <tr
+                        key={post.id}
+                        style={{
+                          borderBottom: '1px solid rgba(30, 27, 24, 0.12)',
+                        }}
+                      >
                         <td style={{ padding: 12 }}>
                           <strong>{post.title}</strong>
-                          <p className="muted" style={{ margin: '4px 0 0 0', fontSize: '0.85em' }}>
+                          <p
+                            className='muted'
+                            style={{ margin: '4px 0 0 0', fontSize: '0.85em' }}
+                          >
                             {post.excerpt}
                           </p>
                         </td>
                         <td style={{ padding: 12 }}>@{post.authorUsername}</td>
                         <td style={{ padding: 12 }}>
-                          <span className="chip">{post.visibility}</span>
+                          <span className='chip'>{post.visibility}</span>
                           {post.madePrivateBy ? (
-                            <p className="muted" style={{ margin: '4px 0 0 0', fontSize: '0.8em' }}>
+                            <p
+                              className='muted'
+                              style={{ margin: '4px 0 0 0', fontSize: '0.8em' }}
+                            >
                               by {post.madePrivateBy}
                             </p>
                           ) : null}
                         </td>
                         <td style={{ padding: 12 }}>
-                          <span className="muted" style={{ fontSize: '0.9em' }}>
+                          <span className='muted' style={{ fontSize: '0.9em' }}>
                             {new Date(post.createdAt).toLocaleDateString()}
                           </span>
                         </td>
                         <td style={{ padding: 12 }}>
-                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              gap: 4,
+                              flexWrap: 'wrap',
+                            }}
+                          >
                             <select
                               value={post.visibility}
-                              onChange={(e) => handleChangeVisibility(post.id, e.target.value)}
+                              onChange={(e) =>
+                                handleChangeVisibility(post.id, e.target.value)
+                              }
                               disabled={actionLoading === post.id}
                               style={{
                                 padding: '4px 8px',
@@ -212,12 +260,14 @@ export default function AdminPostsPage() {
                                 border: '1px solid rgba(30, 27, 24, 0.12)',
                               }}
                             >
-                              <option value="public">Public</option>
-                              <option value="private">Private</option>
-                              <option value="admin-private">Admin private</option>
+                              <option value='public'>Public</option>
+                              <option value='private'>Private</option>
+                              <option value='admin-private'>
+                                Admin private
+                              </option>
                             </select>
                             <button
-                              className="button-secondary"
+                              className='button-secondary'
                               style={{ fontSize: '0.85em', padding: '4px 8px' }}
                               onClick={() => handleDeletePost(post.id)}
                               disabled={actionLoading === post.id}
@@ -234,11 +284,18 @@ export default function AdminPostsPage() {
             )}
 
             {totalPages > 1 && (
-              <div style={{ marginTop: 16, display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <div
+                style={{
+                  marginTop: 16,
+                  display: 'flex',
+                  gap: 8,
+                  justifyContent: 'center',
+                }}
+              >
                 <button
                   disabled={page === 1}
                   onClick={() => setPage(page - 1)}
-                  className="button-secondary"
+                  className='button-secondary'
                   style={{ padding: '4px 8px' }}
                 >
                   Previous
@@ -249,7 +306,7 @@ export default function AdminPostsPage() {
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage(page + 1)}
-                  className="button-secondary"
+                  className='button-secondary'
                   style={{ padding: '4px 8px' }}
                 >
                   Next

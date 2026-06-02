@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiUrl } from '@/utils/api'
-import { adminFetch, getAdminAccessToken, getAdminErrorMessage } from '@/utils/admin-auth'
+import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { Config } from '@/types'
 
 export default function AdminConfigPage() {
@@ -19,11 +19,6 @@ export default function AdminConfigPage() {
   useEffect(() => {
     const loadConfig = async () => {
       setLoading(true)
-
-      if (!getAdminAccessToken()) {
-        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
-        return
-      }
 
       try {
         const response = await adminFetch(apiUrl('/api/admin/config'))
@@ -43,7 +38,11 @@ export default function AdminConfigPage() {
         setConfig(data?.config || null)
         setEdited({})
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Failed to load configuration')
+        setMessage(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load configuration',
+        )
       } finally {
         setLoading(false)
       }
@@ -77,7 +76,9 @@ export default function AdminConfigPage() {
       setEdited({})
       setMessage('Configuration updated successfully')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Error saving configuration')
+      setMessage(
+        error instanceof Error ? error.message : 'Error saving configuration',
+      )
     } finally {
       setSaving(false)
     }
@@ -89,10 +90,10 @@ export default function AdminConfigPage() {
 
   if (loading) {
     return (
-      <main className="shell">
-        <section className="panel">
-          <div className="panel-inner">
-            <p className="muted">Loading configuration...</p>
+      <main className='shell'>
+        <section className='panel'>
+          <div className='panel-inner'>
+            <p className='muted'>Loading configuration...</p>
           </div>
         </section>
       </main>
@@ -101,10 +102,10 @@ export default function AdminConfigPage() {
 
   if (!config) {
     return (
-      <main className="shell">
-        <section className="panel">
-          <div className="panel-inner">
-            <p className="muted">Failed to load configuration</p>
+      <main className='shell'>
+        <section className='panel'>
+          <div className='panel-inner'>
+            <p className='muted'>Failed to load configuration</p>
           </div>
         </section>
       </main>
@@ -112,101 +113,153 @@ export default function AdminConfigPage() {
   }
 
   return (
-    <main className="shell">
-      <section className="panel" style={{ width: 'min(100%, 800px)' }}>
-        <div className="panel-inner">
-          <div className="page-head">
+    <main className='shell'>
+      <section className='panel' style={{ width: 'min(100%, 800px)' }}>
+        <div className='panel-inner'>
+          <div className='page-head'>
             <div>
-              <span className="brand">
-                <span className="brand-mark" />
+              <span className='brand'>
+                <span className='brand-mark' />
                 BetterBlog
               </span>
-              <h1 className="page-title">System Configuration</h1>
-              <p className="lede">Manage application settings and system-wide configuration.</p>
+              <h1 className='page-title'>System Configuration</h1>
+              <p className='lede'>
+                Manage application settings and system-wide configuration.
+              </p>
             </div>
-            <div className="actions">
-              <Link className="button-secondary" href="/admin">
+            <div className='actions'>
+              <Link className='button-secondary' href='/admin'>
                 Back to admin
               </Link>
             </div>
           </div>
 
-          {message ? <div className="notice" style={{ marginTop: 16 }}>{message}</div> : null}
+          {message ? (
+            <div className='notice' style={{ marginTop: 16 }}>
+              {message}
+            </div>
+          ) : null}
 
           <form onSubmit={handleSave} style={{ marginTop: 18 }}>
-            <div className="card">
+            <div className='card'>
               <h2 style={{ marginTop: 0 }}>Post Management</h2>
 
-              <div className="field">
-                <label htmlFor="maxPostsPerUser">Maximum posts per user</label>
+              <div className='field'>
+                <label htmlFor='maxPostsPerUser'>Maximum posts per user</label>
                 <input
-                  id="maxPostsPerUser"
-                  type="number"
-                  min="1"
+                  id='maxPostsPerUser'
+                  type='number'
+                  min='1'
                   value={edited.maxPostsPerUser ?? config.maxPostsPerUser}
-                  onChange={(e) => handleChange('maxPostsPerUser', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleChange('maxPostsPerUser', parseInt(e.target.value))
+                  }
                 />
-                <p className="muted" style={{ margin: '4px 0 0 0', fontSize: '0.85em' }}>
-                  Leave unlimited by setting to a very high number (e.g., 999999)
+                <p
+                  className='muted'
+                  style={{ margin: '4px 0 0 0', fontSize: '0.85em' }}
+                >
+                  Leave unlimited by setting to a very high number (e.g.,
+                  999999)
                 </p>
               </div>
             </div>
 
-            <div className="card">
+            <div className='card'>
               <h2 style={{ marginTop: 0 }}>User Management</h2>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 12,
+                }}
+              >
                 <input
-                  type="checkbox"
-                  checked={edited.allowUserRegistration ?? config.allowUserRegistration}
-                  onChange={(e) => handleChange('allowUserRegistration', e.target.checked)}
+                  type='checkbox'
+                  checked={
+                    edited.allowUserRegistration ?? config.allowUserRegistration
+                  }
+                  onChange={(e) =>
+                    handleChange('allowUserRegistration', e.target.checked)
+                  }
                 />
                 Allow user registration
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
-                  type="checkbox"
-                  checked={edited.requireEmailVerification ?? config.requireEmailVerification}
-                  onChange={(e) => handleChange('requireEmailVerification', e.target.checked)}
+                  type='checkbox'
+                  checked={
+                    edited.requireEmailVerification ??
+                    config.requireEmailVerification
+                  }
+                  onChange={(e) =>
+                    handleChange('requireEmailVerification', e.target.checked)
+                  }
                 />
                 Require email verification
               </label>
             </div>
 
-            <div className="card">
+            <div className='card'>
               <h2 style={{ marginTop: 0 }}>Sharing & API</h2>
 
-              <div className="field">
-                <label htmlFor="maxSharingLinkExpiryDays">Max sharing link expiry (days)</label>
+              <div className='field'>
+                <label htmlFor='maxSharingLinkExpiryDays'>
+                  Max sharing link expiry (days)
+                </label>
                 <input
-                  id="maxSharingLinkExpiryDays"
-                  type="number"
-                  min="1"
-                  value={edited.maxSharingLinkExpiryDays ?? config.maxSharingLinkExpiryDays}
-                  onChange={(e) => handleChange('maxSharingLinkExpiryDays', parseInt(e.target.value))}
+                  id='maxSharingLinkExpiryDays'
+                  type='number'
+                  min='1'
+                  value={
+                    edited.maxSharingLinkExpiryDays ??
+                    config.maxSharingLinkExpiryDays
+                  }
+                  onChange={(e) =>
+                    handleChange(
+                      'maxSharingLinkExpiryDays',
+                      parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
 
-              <div className="field">
-                <label htmlFor="defaultTokenExpiryDays">Default API token expiry (days)</label>
+              <div className='field'>
+                <label htmlFor='defaultTokenExpiryDays'>
+                  Default API token expiry (days)
+                </label>
                 <input
-                  id="defaultTokenExpiryDays"
-                  type="number"
-                  min="1"
-                  value={edited.defaultTokenExpiryDays ?? config.defaultTokenExpiryDays}
-                  onChange={(e) => handleChange('defaultTokenExpiryDays', parseInt(e.target.value))}
+                  id='defaultTokenExpiryDays'
+                  type='number'
+                  min='1'
+                  value={
+                    edited.defaultTokenExpiryDays ??
+                    config.defaultTokenExpiryDays
+                  }
+                  onChange={(e) =>
+                    handleChange(
+                      'defaultTokenExpiryDays',
+                      parseInt(e.target.value),
+                    )
+                  }
                 />
               </div>
             </div>
 
-            <div className="actions">
-              <button className="button" type="submit" disabled={saving || Object.keys(edited).length === 0}>
+            <div className='actions'>
+              <button
+                className='button'
+                type='submit'
+                disabled={saving || Object.keys(edited).length === 0}
+              >
                 {saving ? 'Saving...' : 'Save Configuration'}
               </button>
               <button
-                className="button-secondary"
-                type="button"
+                className='button-secondary'
+                type='button'
                 onClick={() => {
                   setEdited({})
                   setMessage('')

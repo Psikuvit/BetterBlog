@@ -1,4 +1,4 @@
-import { debugFetch, getClientAuthToken } from '@/utils/auth'
+import { debugFetch, resolveAuthToken } from '@/utils/auth'
 
 type ErrorPayload = {
   error?: string
@@ -8,14 +8,14 @@ type ErrorPayload = {
 }
 
 export function getAdminAccessToken(): string | null {
-  return getClientAuthToken()
+  return null
 }
 
 export async function adminFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
-  const token = getClientAuthToken()
+  const token = await resolveAuthToken()
 
   if (!token) {
-    throw new Error('Missing admin access token')
+    return new Response(null, { status: 401, statusText: 'Unauthorized' })
   }
 
   const headers = new Headers(init.headers)
