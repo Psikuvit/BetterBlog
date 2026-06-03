@@ -40,7 +40,7 @@ export default function AdminDashboard() {
       try {
         const [statsResponse, publicCountResponse] = await Promise.all([
           adminFetch(apiUrl('/api/admin/stats')),
-          fetch(apiUrl('/api/public/count')),
+          fetch(apiUrl('/api/posts/public/count')),
         ])
 
         const [statsData, publicCountData] = await Promise.all([
