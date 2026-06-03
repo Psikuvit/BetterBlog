@@ -59,7 +59,7 @@ export default function AdminDashboard() {
           return
         }
 
-        const nextStats = statsData?.stats || null
+        const nextStats = statsData?.stats || statsData || null
 
         if (nextStats) {
           const publicPostsCount = getPublicPostCount(publicCountData)
