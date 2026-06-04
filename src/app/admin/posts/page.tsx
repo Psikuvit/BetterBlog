@@ -3,12 +3,14 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { apiUrl } from '@/utils/api'
+import { apiUrl, getSpringPageItems, getSpringPageTotalPages } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { AdminPost } from '@/types'
 
+type AdminPostRow = AdminPost & { author?: { username?: string } }
+
 export default function AdminPostsPage() {
-  const [posts, setPosts] = useState<AdminPost[]>([])
+  const [posts, setPosts] = useState<AdminPostRow[]>([])
   const [filter, setFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -24,7 +26,8 @@ export default function AdminPostsPage() {
 
       try {
         const params = new URLSearchParams()
-        params.set('page', page.toString())
+        params.set('page', (page - 1).toString())
+        params.set('size', '20')
         if (filter !== 'all') params.set('visibility', filter)
         const response = await adminFetch(
           apiUrl(
@@ -45,8 +48,8 @@ export default function AdminPostsPage() {
           return
         }
 
-        setPosts(Array.isArray(data?.posts) ? data.posts : [])
-        setTotalPages(data?.totalPages || 1)
+        setPosts(getSpringPageItems<AdminPostRow>(data))
+        setTotalPages(getSpringPageTotalPages(data))
       } catch (error) {
         setMessage(
           error instanceof Error ? error.message : 'Failed to load posts',
@@ -173,9 +176,9 @@ export default function AdminPostsPage() {
                 }}
               >
                 <option value='all'>All posts</option>
-                <option value='public'>Public</option>
-                <option value='private'>Private</option>
-                <option value='admin-private'>Admin private</option>
+                <option value='PUBLIC'>Public</option>
+                <option value='PRIVATE'>Private</option>
+                <option value='ADMIN_PRIVATE'>Admin private</option>
               </select>
             </div>
 
@@ -223,7 +226,7 @@ export default function AdminPostsPage() {
                           </p>
                         </td>
                         <td style={{ padding: 12 }}>
-                          @{post.authorUsername}
+                          @{post.authorUsername || post.author?.username || 'unknown'}
                         </td>
                         <td style={{ padding: 12 }}>
                           <span className='chip'>{post.visibility}</span>
@@ -262,11 +265,9 @@ export default function AdminPostsPage() {
                                 border: '1px solid rgba(30, 27, 24, 0.12)',
                               }}
                             >
-                              <option value='public'>Public</option>
-                              <option value='private'>Private</option>
-                              <option value='admin-private'>
-                                Admin private
-                              </option>
+                              <option value='PUBLIC'>Public</option>
+                              <option value='PRIVATE'>Private</option>
+                              <option value='ADMIN_PRIVATE'>Admin private</option>
                             </select>
                             <button
                               className='button-secondary'

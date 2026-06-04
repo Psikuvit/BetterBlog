@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { apiUrl } from '@/utils/api'
+import { apiUrl, getSpringPageItems, getSpringPageTotalPages } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { AdminUser } from '@/types'
 
@@ -24,7 +24,8 @@ export default function AdminUsersPage() {
 
       try {
         const params = new URLSearchParams()
-        params.set('page', page.toString())
+        params.set('page', (page - 1).toString())
+        params.set('size', '20')
         if (filter !== 'all') params.set('role', filter.toUpperCase())
         const response = await adminFetch(
           apiUrl(
@@ -45,8 +46,8 @@ export default function AdminUsersPage() {
           return
         }
 
-        setUsers(Array.isArray(data?.users) ? data.users : [])
-        setTotalPages(data?.totalPages || 1)
+        setUsers(getSpringPageItems<AdminUser>(data, 'users'))
+        setTotalPages(getSpringPageTotalPages(data))
       } catch (error) {
         setMessage(
           error instanceof Error ? error.message : 'Failed to load users',

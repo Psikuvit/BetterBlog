@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { apiUrl } from '@/utils/api'
+import { apiUrl, getSpringPageItems, getSpringPageTotalPages } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { AdminActivityLog } from '@/types'
 
@@ -30,7 +30,8 @@ export default function AdminActivityPage() {
 
       try {
         const params = new URLSearchParams()
-        params.set('page', page.toString())
+        params.set('page', (page - 1).toString())
+        params.set('size', '20')
         if (severity) params.set('severity', severity)
         if (username) params.set('username', username)
         const response = await adminFetch(
@@ -52,8 +53,8 @@ export default function AdminActivityPage() {
           return
         }
 
-        setLogs(Array.isArray(data?.logs) ? data.logs : [])
-        setTotalPages(data?.totalPages || 1)
+        setLogs(getSpringPageItems<AdminActivityLog>(data, 'logs'))
+        setTotalPages(getSpringPageTotalPages(data))
       } catch (error) {
         setMessage(
           error instanceof Error

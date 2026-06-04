@@ -17,6 +17,10 @@ export function isPostItem(value: unknown): value is PostItem {
   return typeof value === 'object' && value !== null && 'id' in value
 }
 
-export function getFeedLabel(options: FeedOption[], value: string, fallback: string): string {
+export function getFeedLabel(
+  options: FeedOption[],
+  value: string,
+  fallback: string,
+): string {
   return options.find((item) => item.value === value)?.label || fallback
 }
