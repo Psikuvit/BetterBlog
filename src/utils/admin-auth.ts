@@ -7,10 +7,6 @@ type ErrorPayload = {
   errorCode?: string
 }
 
-export function getAdminAccessToken(): string | null {
-  return null
-}
-
 export async function adminFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
   const token = await resolveAuthToken()
 
@@ -33,7 +29,7 @@ export function getAdminErrorMessage(response: Response, payload: unknown): stri
   }
 
   if (response.status === 403) {
-    return 'Admin access required'
+    return 'You do not have permission for this action'
   }
 
   if (response.status === 404) {
