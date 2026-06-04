@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { AdminNav } from '@/components/admin-nav'
+import { useStaffAccess } from '@/hooks/use-staff-access'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { Stats } from '@/types'
@@ -29,6 +31,7 @@ function getPublicPostCount(payload: unknown): number | null {
 }
 
 export default function AdminDashboard() {
+  const { ready, role, isAdmin } = useStaffAccess()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
@@ -36,7 +39,14 @@ export default function AdminDashboard() {
   const pathname = usePathname()
 
   useEffect(() => {
+    if (!ready) return
+
     const loadStats = async () => {
+      if (!isAdmin) {
+        setLoading(false)
+        return
+      }
+
       try {
         const [statsResponse, publicCountResponse] = await Promise.all([
           adminFetch(apiUrl('/api/admin/stats')),
@@ -79,8 +89,12 @@ export default function AdminDashboard() {
         setLoading(false)
       }
     }
-    loadStats()
-  }, [pathname, router])
+    void loadStats()
+  }, [isAdmin, pathname, ready, router])
+
+  if (!ready || !role) {
+    return null
+  }
 
   return (
     <main className='shell'>
@@ -92,23 +106,16 @@ export default function AdminDashboard() {
                 <span className='brand-mark' />
                 BetterBlog
               </span>
-              <h1 className='page-title'>Admin Dashboard</h1>
+              <h1 className='page-title'>
+                {isAdmin ? 'Admin Dashboard' : 'Moderation Dashboard'}
+              </h1>
               <p className='lede'>
-                Manage users, posts, content moderation, and system
-                configuration.
+                {isAdmin
+                  ? 'Manage users, posts, moderation, and system configuration.'
+                  : 'Review and moderate public posts. User-private posts are hidden for compliance.'}
               </p>
             </div>
-            <div className='actions'>
-              <Link className='button-secondary' href='/'>
-                Home
-              </Link>
-              <Link className='button-secondary' href='/admin/posts'>
-                Posts
-              </Link>
-              <Link className='button-secondary' href='/admin/users'>
-                Users
-              </Link>
-            </div>
+            <AdminNav role={role} />
           </div>
 
           {message ? (
@@ -119,7 +126,7 @@ export default function AdminDashboard() {
 
           {loading ? (
             <p className='muted'>Loading dashboard...</p>
-          ) : stats ? (
+          ) : isAdmin && stats ? (
             <>
               <div
                 style={{
@@ -159,7 +166,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className='card'>
-                  <h3 style={{ margin: '0 0 8px 0' }}>Private Posts</h3>
+                  <h3 style={{ margin: '0 0 8px 0' }}>Staff-private Posts</h3>
                   <p
                     style={{
                       fontSize: '1.8em',
@@ -197,100 +204,72 @@ export default function AdminDashboard() {
                   marginTop: 24,
                 }}
               >
-                <Link
+                <DashboardLink
                   href='/admin/posts'
-                  className='card'
-                  style={{ textDecoration: 'none', cursor: 'pointer' }}
-                >
-                  <h3 style={{ margin: '0 0 8px 0', color: 'inherit' }}>
-                    📝 Post Management
-                  </h3>
-                  <p className='muted' style={{ margin: 0, fontSize: '0.9em' }}>
-                    Review, edit, and moderate posts. Make content private or
-                    public.
-                  </p>
-                </Link>
-
-                <Link
+                  title='Post Management'
+                  description='Review, edit, and moderate posts.'
+                />
+                <DashboardLink
                   href='/admin/users'
-                  className='card'
-                  style={{ textDecoration: 'none', cursor: 'pointer' }}
-                >
-                  <h3 style={{ margin: '0 0 8px 0', color: 'inherit' }}>
-                    👥 User Management
-                  </h3>
-                  <p className='muted' style={{ margin: 0, fontSize: '0.9em' }}>
-                    View all users and manage roles and permissions.
-                  </p>
-                </Link>
-
-                <Link
+                  title='User Management'
+                  description='View users and promote roles.'
+                />
+                <DashboardLink
                   href='/admin/moderators'
-                  className='card'
-                  style={{ textDecoration: 'none', cursor: 'pointer' }}
-                >
-                  <h3 style={{ margin: '0 0 8px 0', color: 'inherit' }}>
-                    🛡️ Moderation
-                  </h3>
-                  <p className='muted' style={{ margin: 0, fontSize: '0.9em' }}>
-                    Promote users to moderators and manage moderation settings.
-                  </p>
-                </Link>
-
-                <Link
+                  title='Moderators'
+                  description='Manage moderator assignments.'
+                />
+                <DashboardLink
                   href='/admin/activity'
-                  className='card'
-                  style={{ textDecoration: 'none', cursor: 'pointer' }}
-                >
-                  <h3 style={{ margin: '0 0 8px 0', color: 'inherit' }}>
-                    📋 Activity Logs
-                  </h3>
-                  <p className='muted' style={{ margin: 0, fontSize: '0.9em' }}>
-                    Monitor all user activities and security events across the
-                    platform.
-                  </p>
-                </Link>
-
-                <Link
+                  title='Activity Logs'
+                  description='Monitor platform activity.'
+                />
+                <DashboardLink
                   href='/admin/config'
-                  className='card'
-                  style={{ textDecoration: 'none', cursor: 'pointer' }}
-                >
-                  <h3 style={{ margin: '0 0 8px 0', color: 'inherit' }}>
-                    ⚙️ Configuration
-                  </h3>
-                  <p className='muted' style={{ margin: 0, fontSize: '0.9em' }}>
-                    Manage system settings and application configuration.
-                  </p>
-                </Link>
-              </div>
-
-              <div className='card' style={{ marginTop: 24 }}>
-                <h2 style={{ marginTop: 0 }}>Admin pages</h2>
-                <div className='actions'>
-                  <Link className='button-secondary' href='/admin/posts'>
-                    Post management
-                  </Link>
-                  <Link className='button-secondary' href='/admin/users'>
-                    User management
-                  </Link>
-                  <Link className='button-secondary' href='/admin/moderators'>
-                    Moderators
-                  </Link>
-                  <Link className='button-secondary' href='/admin/activity'>
-                    Activity logs
-                  </Link>
-                  <Link className='button-secondary' href='/admin/config'>
-                    Configuration
-                  </Link>
-                </div>
+                  title='Configuration'
+                  description='Manage application settings.'
+                />
               </div>
             </>
           ) : (
-            <p className='muted'>Failed to load dashboard data.</p>
+            <div className='card' style={{ marginTop: 18 }}>
+              <h2 style={{ marginTop: 0 }}>Moderation tools</h2>
+              <p className='muted'>
+                You can review public posts, edit them, hide them from the
+                public feed, and republish posts you previously made private.
+              </p>
+              <div className='actions' style={{ marginTop: 12 }}>
+                <Link className='button' href='/admin/posts'>
+                  Open post management
+                </Link>
+              </div>
+            </div>
           )}
         </div>
       </section>
     </main>
+  )
+}
+
+function DashboardLink({
+  href,
+  title,
+  description,
+}: {
+  href: string
+  title: string
+  description: string
+}) {
+  return (
+    <Link
+      href={href}
+      className='card'
+      style={{ textDecoration: 'none', cursor: 'pointer' }}
+    >
+      <h3 style={{ margin: '0 0 8px 0', color: 'inherit' }}>{title}</h3>
+      <p className='muted' style={{ margin: 0, fontSize: '0.9em' }}>
+        {description}
+      </p>
+    </Link>
   )
 }

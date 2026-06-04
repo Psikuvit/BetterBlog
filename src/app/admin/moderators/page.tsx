@@ -1,13 +1,15 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { AdminNav } from '@/components/admin-nav'
+import { useStaffAccess } from '@/hooks/use-staff-access'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { Moderator } from '@/types'
 
 export default function AdminModeratorsPage() {
+  const { ready, role } = useStaffAccess({ adminOnly: true })
   const [moderators, setModerators] = useState<Moderator[]>([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -16,6 +18,8 @@ export default function AdminModeratorsPage() {
   const pathname = usePathname()
 
   useEffect(() => {
+    if (!ready) return
+
     const loadModerators = async () => {
       setLoading(true)
 
@@ -44,7 +48,7 @@ export default function AdminModeratorsPage() {
       }
     }
     loadModerators()
-  }, [pathname, router])
+  }, [pathname, ready, router])
 
   const handleRemoveModerator = async (moderatorId: string) => {
     if (!confirm('Remove this user from moderator role?')) return
@@ -88,6 +92,10 @@ export default function AdminModeratorsPage() {
     'View moderation queue',
   ]
 
+  if (!ready || !role) {
+    return null
+  }
+
   return (
     <main className='shell'>
       <section className='panel' style={{ width: 'min(100%, 960px)' }}>
@@ -101,11 +109,7 @@ export default function AdminModeratorsPage() {
               <h1 className='page-title'>Moderation</h1>
               <p className='lede'>Manage moderators and their permissions.</p>
             </div>
-            <div className='actions'>
-              <Link className='button-secondary' href='/admin'>
-                Back to admin
-              </Link>
-            </div>
+            <AdminNav role={role} />
           </div>
 
           {message ? (

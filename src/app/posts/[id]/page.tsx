@@ -91,7 +91,7 @@ export default function PostDetailPage() {
       title,
       slug,
       content,
-      visibility: visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC',
+      visibility,
       ...(excerpt ? { excerpt } : {}),
       tags: tagList(tags),
       ...(coverImageUrl ? { coverImageUrl } : {}),
@@ -175,9 +175,9 @@ export default function PostDetailPage() {
                       <div className="field">
                         <label htmlFor="visibility">Visibility</label>
                         <select id="visibility" value={visibility} onChange={(event) => setVisibility(event.target.value)}>
-                          <option value="public">Public</option>
-                          <option value="private">Private</option>
-                          <option value="admin-private">Admin private</option>
+                          <option value="PUBLIC">Public</option>
+                          <option value="PRIVATE">Private</option>
+                          <option value="ADMIN_PRIVATE">Staff private</option>
                         </select>
                       </div>
                     </div>

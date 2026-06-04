@@ -3,13 +3,21 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { AdminNav } from '@/components/admin-nav'
+import { useStaffAccess } from '@/hooks/use-staff-access'
 import { apiUrl, getSpringPageItems, getSpringPageTotalPages } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { AdminPost } from '@/types'
 
 type AdminPostRow = AdminPost & { author?: { username?: string } }
 
+const STAFF_VISIBILITY_OPTIONS = [
+  { value: 'PUBLIC', label: 'Public' },
+  { value: 'ADMIN_PRIVATE', label: 'Staff private' },
+] as const
+
 export default function AdminPostsPage() {
+  const { ready, role, isAdmin } = useStaffAccess()
   const [posts, setPosts] = useState<AdminPostRow[]>([])
   const [filter, setFilter] = useState('all')
   const [page, setPage] = useState(1)
@@ -21,6 +29,8 @@ export default function AdminPostsPage() {
   const pathname = usePathname()
 
   useEffect(() => {
+    if (!ready) return
+
     const loadPosts = async () => {
       setLoading(true)
 
@@ -48,7 +58,7 @@ export default function AdminPostsPage() {
           return
         }
 
-        setPosts(getSpringPageItems<AdminPostRow>(data))
+        setPosts(getSpringPageItems<AdminPostRow>(data, 'posts'))
         setTotalPages(getSpringPageTotalPages(data))
       } catch (error) {
         setMessage(
@@ -58,8 +68,8 @@ export default function AdminPostsPage() {
         setLoading(false)
       }
     }
-    loadPosts()
-  }, [filter, page, pathname, router])
+    void loadPosts()
+  }, [filter, page, pathname, ready, router])
 
   const handleChangeVisibility = async (
     postId: string,
@@ -132,6 +142,10 @@ export default function AdminPostsPage() {
     }
   }
 
+  if (!ready || !role) {
+    return null
+  }
+
   return (
     <main className='shell'>
       <section className='panel' style={{ width: 'min(100%, 1000px)' }}>
@@ -144,15 +158,11 @@ export default function AdminPostsPage() {
               </span>
               <h1 className='page-title'>Post Management</h1>
               <p className='lede'>
-                Review and moderate posts. Admins can make posts private or
-                public.
+                Review and moderate posts visible to staff. User-private posts
+                are excluded for compliance.
               </p>
             </div>
-            <div className='actions'>
-              <Link className='button-secondary' href='/admin'>
-                Back to admin
-              </Link>
-            </div>
+            <AdminNav role={role} />
           </div>
 
           {message ? (
@@ -175,10 +185,9 @@ export default function AdminPostsPage() {
                   border: '1px solid rgba(30, 27, 24, 0.12)',
                 }}
               >
-                <option value='all'>All posts</option>
+                <option value='all'>All visible posts</option>
                 <option value='PUBLIC'>Public</option>
-                <option value='PRIVATE'>Private</option>
-                <option value='ADMIN_PRIVATE'>Admin private</option>
+                <option value='ADMIN_PRIVATE'>Staff private</option>
               </select>
             </div>
 
@@ -226,7 +235,10 @@ export default function AdminPostsPage() {
                           </p>
                         </td>
                         <td style={{ padding: 12 }}>
-                          @{post.authorUsername || post.author?.username || 'unknown'}
+                          @
+                          {post.authorUsername ||
+                            post.author?.username ||
+                            'unknown'}
                         </td>
                         <td style={{ padding: 12 }}>
                           <span className='chip'>{post.visibility}</span>
@@ -252,6 +264,13 @@ export default function AdminPostsPage() {
                               flexWrap: 'wrap',
                             }}
                           >
+                            <Link
+                              className='button-secondary'
+                              style={{ fontSize: '0.85em', padding: '4px 8px' }}
+                              href={`/admin/posts/${post.id}`}
+                            >
+                              Edit
+                            </Link>
                             <select
                               value={post.visibility}
                               onChange={(e) =>
@@ -265,18 +284,25 @@ export default function AdminPostsPage() {
                                 border: '1px solid rgba(30, 27, 24, 0.12)',
                               }}
                             >
-                              <option value='PUBLIC'>Public</option>
-                              <option value='PRIVATE'>Private</option>
-                              <option value='ADMIN_PRIVATE'>Admin private</option>
+                              {STAFF_VISIBILITY_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
                             </select>
-                            <button
-                              className='button-secondary'
-                              style={{ fontSize: '0.85em', padding: '4px 8px' }}
-                              onClick={() => handleDeletePost(post.id)}
-                              disabled={actionLoading === post.id}
-                            >
-                              Delete
-                            </button>
+                            {isAdmin ? (
+                              <button
+                                className='button-secondary'
+                                style={{
+                                  fontSize: '0.85em',
+                                  padding: '4px 8px',
+                                }}
+                                onClick={() => handleDeletePost(post.id)}
+                                disabled={actionLoading === post.id}
+                              >
+                                Delete
+                              </button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>

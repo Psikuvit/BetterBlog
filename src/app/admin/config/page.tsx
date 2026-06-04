@@ -1,13 +1,15 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { AdminNav } from '@/components/admin-nav'
+import { useStaffAccess } from '@/hooks/use-staff-access'
 import { apiUrl } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { Config } from '@/types'
 
 export default function AdminConfigPage() {
+  const { ready, role } = useStaffAccess({ adminOnly: true })
   const [config, setConfig] = useState<Config | null>(null)
   const [edited, setEdited] = useState<Partial<Config>>({})
   const [message, setMessage] = useState('')
@@ -17,6 +19,8 @@ export default function AdminConfigPage() {
   const pathname = usePathname()
 
   useEffect(() => {
+    if (!ready) return
+
     const loadConfig = async () => {
       setLoading(true)
 
@@ -48,7 +52,7 @@ export default function AdminConfigPage() {
       }
     }
     loadConfig()
-  }, [pathname, router])
+  }, [pathname, ready, router])
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -86,6 +90,10 @@ export default function AdminConfigPage() {
 
   const handleChange = (field: keyof Config, value: unknown) => {
     setEdited({ ...edited, [field]: value })
+  }
+
+  if (!ready || !role) {
+    return null
   }
 
   if (loading) {
@@ -127,11 +135,7 @@ export default function AdminConfigPage() {
                 Manage application settings and system-wide configuration.
               </p>
             </div>
-            <div className='actions'>
-              <Link className='button-secondary' href='/admin'>
-                Back to admin
-              </Link>
-            </div>
+            <AdminNav role={role} />
           </div>
 
           {message ? (

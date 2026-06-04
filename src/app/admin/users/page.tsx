@@ -1,17 +1,24 @@
 'use client'
 
-import Link from 'next/link'
+
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { AdminNav } from '@/components/admin-nav'
+import { useStaffAccess } from '@/hooks/use-staff-access'
 import { apiUrl, getSpringPageItems, getSpringPageTotalPages } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { AdminUser } from '@/types'
 
 export default function AdminUsersPage() {
+  const { ready, role } = useStaffAccess({ adminOnly: true })
   const [users, setUsers] = useState<AdminUser[]>([])
   const [filter, setFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [promoteUserId, setPromoteUserId] = useState('')
+  const [promoteRole, setPromoteRole] = useState<'USER' | 'MODERATOR' | 'ADMIN'>(
+    'MODERATOR',
+  )
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -19,6 +26,8 @@ export default function AdminUsersPage() {
   const pathname = usePathname()
 
   useEffect(() => {
+    if (!ready) return
+
     const loadUsers = async () => {
       setLoading(true)
 
@@ -57,7 +66,7 @@ export default function AdminUsersPage() {
       }
     }
     loadUsers()
-  }, [filter, page, pathname, router])
+  }, [filter, page, pathname, ready, router])
 
   const handlePromoteRole = async (
     userId: string,
@@ -98,10 +107,22 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handlePromoteById = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const userId = promoteUserId.trim()
+    if (!userId) return
+    await handlePromoteRole(userId, promoteRole)
+    setPromoteUserId('')
+  }
+
   const roleColors: Record<string, string> = {
     USER: 'rgba(107, 114, 128, 0.2)',
     MODERATOR: 'rgba(251, 146, 60, 0.2)',
     ADMIN: 'rgba(239, 68, 68, 0.2)',
+  }
+
+  if (!ready || !role) {
+    return null
   }
 
   return (
@@ -116,14 +137,11 @@ export default function AdminUsersPage() {
               </span>
               <h1 className='page-title'>User Management</h1>
               <p className='lede'>
-                View all users and manage their roles and permissions.
+                View all users and promote them to moderator or admin by user
+                ID.
               </p>
             </div>
-            <div className='actions'>
-              <Link className='button-secondary' href='/admin'>
-                Back to admin
-              </Link>
-            </div>
+            <AdminNav role={role} />
           </div>
 
           {message ? (
@@ -131,6 +149,46 @@ export default function AdminUsersPage() {
               {message}
             </div>
           ) : null}
+
+          <form
+            onSubmit={handlePromoteById}
+            className='card'
+            style={{ marginTop: 18 }}
+          >
+            <h2 style={{ marginTop: 0 }}>Promote by user ID</h2>
+            <div className='grid-2'>
+              <div className='field'>
+                <label htmlFor='promoteUserId'>User ID</label>
+                <input
+                  id='promoteUserId'
+                  value={promoteUserId}
+                  onChange={(event) => setPromoteUserId(event.target.value)}
+                  placeholder='Paste the user UUID'
+                />
+              </div>
+              <div className='field'>
+                <label htmlFor='promoteRole'>Role</label>
+                <select
+                  id='promoteRole'
+                  value={promoteRole}
+                  onChange={(event) =>
+                    setPromoteRole(
+                      event.target.value as 'USER' | 'MODERATOR' | 'ADMIN',
+                    )
+                  }
+                >
+                  <option value='USER'>User</option>
+                  <option value='MODERATOR'>Moderator</option>
+                  <option value='ADMIN'>Admin</option>
+                </select>
+              </div>
+            </div>
+            <div className='actions'>
+              <button className='button' type='submit'>
+                Update role
+              </button>
+            </div>
+          </form>
 
           <div className='card' style={{ marginTop: 18 }}>
             <div style={{ marginBottom: 16 }}>

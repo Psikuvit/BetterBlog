@@ -11,6 +11,7 @@ import {
   getSessionUser,
   authFetch,
 } from "@/utils/auth";
+import { getSessionRole, isStaffRole } from "@/utils/roles";
 import {
   getFeedLabel,
   isPostItem,
@@ -34,6 +35,11 @@ export default function HomePage() {
     totalPages: 0,
   });
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isStaff, setIsStaff] = useState(false);
+
+  useEffect(() => {
+    void getSessionRole().then((role) => setIsStaff(isStaffRole(role)));
+  }, [refreshKey]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -276,9 +282,11 @@ export default function HomePage() {
             <Link className="button-secondary" href="/activity">
               Activity
             </Link>
-            <Link className="button-secondary" href="/admin">
-              Admin
-            </Link>
+            {isStaff ? (
+              <Link className="button-secondary" href="/admin">
+                Staff
+              </Link>
+            ) : null}
           </div>
 
           <div className="home-summary">

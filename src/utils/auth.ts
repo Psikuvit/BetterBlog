@@ -98,6 +98,7 @@ export type SessionUser = {
   id?: string | null
   username?: string | null
   email?: string | null
+  role?: string | null
   profilePictureUrl?: string | null
   bio?: string | null
   enabled?: boolean | null

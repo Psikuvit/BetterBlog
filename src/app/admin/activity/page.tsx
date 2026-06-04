@@ -1,13 +1,15 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { AdminNav } from '@/components/admin-nav'
+import { useStaffAccess } from '@/hooks/use-staff-access'
 import { apiUrl, getSpringPageItems, getSpringPageTotalPages } from '@/utils/api'
 import { adminFetch, getAdminErrorMessage } from '@/utils/admin-auth'
 import type { AdminActivityLog } from '@/types'
 
 export default function AdminActivityPage() {
+  const { ready, role } = useStaffAccess({ adminOnly: true })
   const [logs, setLogs] = useState<AdminActivityLog[]>([])
   const [severity, setSeverity] = useState('')
   const [username, setUsername] = useState('')
@@ -25,6 +27,8 @@ export default function AdminActivityPage() {
   }
 
   useEffect(() => {
+    if (!ready) return
+
     const loadLogs = async () => {
       setLoading(true)
 
@@ -66,7 +70,7 @@ export default function AdminActivityPage() {
       }
     }
     loadLogs()
-  }, [severity, username, page, pathname, router])
+  }, [severity, username, page, pathname, ready, router])
 
   const getActionLabel = (action: string): string => {
     const labels: Record<string, string> = {
@@ -80,6 +84,10 @@ export default function AdminActivityPage() {
       user_banned: 'User banned',
     }
     return labels[action] || action
+  }
+
+  if (!ready || !role) {
+    return null
   }
 
   return (
@@ -97,11 +105,7 @@ export default function AdminActivityPage() {
                 Monitor all administrative actions and critical system events.
               </p>
             </div>
-            <div className='actions'>
-              <Link className='button-secondary' href='/admin'>
-                Back to admin
-              </Link>
-            </div>
+            <AdminNav role={role} />
           </div>
 
           {message ? (
