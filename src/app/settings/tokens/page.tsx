@@ -79,13 +79,13 @@ export default function TokensPage() {
         return
       }
 
-      if (!data?.token || typeof data.token !== 'object' || !('id' in data.token)) {
+      if (!data?.id) {
         setMessage('Token created, but the response was missing token details.')
         return
       }
 
-      setCreatedToken(data.token)
-      setTokens([...tokens, data.token])
+      setCreatedToken(data)
+      setTokens([...tokens, data])
       setTokenName('')
       setSelectedScopes([])
       setExpiresIn('90d')
