@@ -44,7 +44,7 @@ export default function ActivityPage() {
           return
         }
 
-        setLogs(Array.isArray(data) ? data.filter(isActivityLog) : [])
+        setLogs(Array.isArray(data?.content) ? data.content.filter(isActivityLog) : [])
         setTotalPages(data?.totalPages || 1)
       } catch (error) {
         console.error('Failed to load activity logs:', error)
