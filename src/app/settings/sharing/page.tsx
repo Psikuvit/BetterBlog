@@ -43,8 +43,8 @@ export default function SharingPage() {
         }
 
         setLinks(
-          Array.isArray(linksData?.links)
-            ? linksData.links.filter(isTemporaryLink)
+          Array.isArray(linksData?.content)
+            ? linksData.content.filter(isTemporaryLink)
             : [],
         );
         setPosts(
