@@ -123,6 +123,7 @@ export type TemporaryLink = {
   createdAt: string
   accessCount: number
   maxAccess?: number
+  post?: { id: string; title: string }
 }
 
 export type SharedPost = {

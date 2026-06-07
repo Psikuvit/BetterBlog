@@ -86,11 +86,7 @@ export default function SharingPage() {
         return;
       }
 
-      if (
-        !data?.content ||
-        typeof data.content !== "object" ||
-        !("id" in data.content)
-      ) {
+      if (!data?.id) {
         setMessage("Link created, but the response was missing link details.");
         return;
       }
@@ -269,7 +265,7 @@ export default function SharingPage() {
                           >
                             <td style={{ padding: 8 }}>
                               <code style={{ fontSize: "0.85em" }}>
-                                {link.postId.slice(0, 8)}
+                                {(link.postId || link.post?.id || "").slice(0, 8)}
                               </code>
                             </td>
                             <td style={{ padding: 8 }}>
