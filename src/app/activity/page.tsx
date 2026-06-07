@@ -32,7 +32,7 @@ export default function ActivityPage() {
       setLoading(true)
       try {
         const params = new URLSearchParams()
-        params.set('page', page.toString())
+        params.set('page', (page - 1).toString())
         if (filter !== 'all') params.set('action', filter)
         const response = await authFetch(apiUrl(`/api/activity${params.toString() ? `?${params.toString()}` : ''}`))
         const data = await response.json().catch(() => null)
