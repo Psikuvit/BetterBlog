@@ -15,6 +15,7 @@ export type PostItem = {
   createdAt: string | null
   updatedAt: string | null
   authorId?: string | null
+  author?: { id: string; username: string }
   authorUsername?: string | null
 }
 

@@ -77,7 +77,7 @@ export default function HomePage() {
           const ownedPosts = currentUserId
             ? nextPosts.filter(
                 (post: PostItem) =>
-                  (post.authorId || "").toLowerCase() === currentUserId,
+                  (post.author?.id || post.authorId || "").toLowerCase() === currentUserId,
               )
             : [];
           setPosts(ownedPosts);
