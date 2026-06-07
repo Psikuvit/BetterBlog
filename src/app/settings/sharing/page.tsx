@@ -87,15 +87,15 @@ export default function SharingPage() {
       }
 
       if (
-        !data?.link ||
-        typeof data.link !== "object" ||
-        !("id" in data.link)
+        !data?.content ||
+        typeof data.content !== "object" ||
+        !("id" in data.content)
       ) {
         setMessage("Link created, but the response was missing link details.");
         return;
       }
 
-      setLinks([...links, data.link]);
+      setLinks([...links, data.content]);
       setSelectedPostId("");
       setExpiresIn("7d");
       setMaxAccess("");
