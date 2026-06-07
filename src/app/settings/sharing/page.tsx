@@ -48,7 +48,7 @@ export default function SharingPage() {
             : [],
         );
         setPosts(
-          Array.isArray(postsData?.posts) ? postsData.posts.filter(isPost) : [],
+          Array.isArray(postsData?.content) ? postsData.content.filter(isPost) : [],
         );
       } catch (error) {
         setMessage(
