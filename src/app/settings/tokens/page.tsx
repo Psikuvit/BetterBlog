@@ -44,7 +44,7 @@ export default function TokensPage() {
           setTokens([])
           return
         }
-        setTokens(Array.isArray(data?.tokens) ? data.tokens.filter(isAPIToken) : [])
+        setTokens(Array.isArray(data) ? data.filter(isAPIToken) : [])
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load tokens')
       } finally {
